@@ -1,5 +1,9 @@
 abstract type Test end
 
+length(x::Test) = 1
+iterate(x::Test) = (x, nothing)
+iterate(x::Test, state) = nothing
+
 function conduct_test!(test::Test, indv::Individual)
     vl = get_viral_load(indv)
     if vl == 0.0
