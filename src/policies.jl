@@ -107,7 +107,8 @@ function test_and_isolate!(pol::DynamicScreening{T1}, gr::Group) where{T1<:Test}
     # update buffer, make sure we are in sync with group timeline
     if pol.buffer_t <= now(gr.individuals[1])
         pol.buffer_t += 1
-        if pol.buffer > 0
+        # check that the weekday is a followup day!
+        if (pol.buffer > 0) & (now(gr.individuals[1]) in pol.followup_weekdays)
             pol.buffer -= 1
         end
     end
@@ -117,7 +118,7 @@ function test_and_isolate!(pol::DynamicScreening{T1}, gr::Group) where{T1<:Test}
         is_isolating(x) ? continue : nothing # skip isolating individuals
         # detect based on symptoms and screening test
         positive = is_symptomatic(x)
-        if !positive & (pol.buffer > 0)
+        if !positive & (pol.buffer > 0) & (now(x) in pol.followup_weekdays)
             # check if screening tests comes back positive
             positive = conduct_test!(pol.screening_test, x)
         end
@@ -133,8 +134,8 @@ function test_and_isolate!(pol::DynamicScreening{T1}, gr::Group) where{T1<:Test}
             push!(to_screen, x)
         end
     end
-    # screen remaining individuals if positive extension
-    if followup_extension > 0
+    # screen remaining individuals if positive extension (and correct weekday)
+    if (followup_extension > 0) & (now(gr.individuals[1]) in pol.followup_weekdays)
         for x in to_screen
             screening_positive = conduct_test!(pol.screening_test, x)
             if screening_positive
