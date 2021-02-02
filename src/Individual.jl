@@ -146,7 +146,7 @@ end
 function get_contact_log(indv::Individual)
     DataFrames.DataFrame(
         uuid_a = string(indv.uuid),
-        uuid_b = string(indv.contacts_id),
+        uuid_b = string.(indv.contacts_id),
         day = indv.contacts_day,
         got_infected = indv.contacts_got_infected,
         infected_other = indv.contacts_infected
