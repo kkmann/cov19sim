@@ -9,7 +9,7 @@ steps!(school, 80)
 #show(evaluate(school))
 
 import Distributed.pmap, Distributed.addprocs, Distributed.@everywhere
-addprocs(12)
+addprocs(1)
 @everywhere begin
 
 using cov19sim
@@ -22,10 +22,4 @@ end
 
 end
 
-@time show(vcat(pmap(f, 1:500)...))
-
-tmp = @time vcat(pmap(f, 1:1000)...)
-tmp = @time vcat(pmap(f, 1:2000)...)
-
-
-tmp = @time vcat(map(f, 1:1000)...)
+@time vcat(pmap(f, 1:50)...)
