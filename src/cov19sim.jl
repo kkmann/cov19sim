@@ -27,7 +27,7 @@ export now, pcr_test_and_isolate!, step!, steps!, infect!, meet!, get_status_log
 
 include("Test.jl")
 export Test
-export conduct_test!, type
+export conduct_test!, type, sensitivity, specificity
 export LogPropTest
 
 include("Group.jl")
