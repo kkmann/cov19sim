@@ -14,14 +14,7 @@ function ThreeLevelPopulation(;
     policy_class = DoNothing(),
     policy_school = DoNothing(),
     meeting_days = collect(0:4),
-    disease_model = LarremoreModel(
-        0.75,
-        3.0, 2.5, 3.5, # onset
-        7.0, 11.0, 3.0, 1.5, # peak
-        0.0, 3.0, # symptoms
-        6.0, 4.0, 9.0, # clearance
-        .25 # infectivtiy
-    ),
+    disease_model = LarremoreModel(0.033),
     pr_unrelated_symptoms = 0.01
 )
     bubbles = []

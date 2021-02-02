@@ -19,6 +19,23 @@ struct LarremoreModel{T} <: DiseaseModel
 
 	l10vl_infectivity_slope::T
 end
+function LarremoreModel(
+    l10vl_infectivity_slope; # this is so completely arbitrary that a default makes no sense!
+    frac_symptomatic = 0.75,
+    l10vl_onset = 1e3, day_onset_min = 2.5, day_onset_max = 3.5,
+    l10vl_peak_min = 7.0, l10vl_peak_max = 11.0, peak_delay_max = 3.0, peak_delay_shape = 1.5,
+	symptom_delay_min = 0.0, symptom_delay_max = 3.0,
+    l10vl_clearance = 6.0, clearance_delay_min = 4.0, clearance_delay_max = 9.0
+)
+    LarremoreModel{Float64}(
+        frac_symptomatic,
+        l10vl_onset, day_onset_min, day_onset_max,
+        l10vl_peak_min, l10vl_peak_max, peak_delay_max, peak_delay_shape,
+        symptom_delay_min, symptom_delay_max,
+        l10vl_clearance, clearance_delay_min, clearance_delay_max,
+        l10vl_infectivity_slope
+    )
+end
 
 function sample(dm::LarremoreModel{T}) where {T<:Real}
 

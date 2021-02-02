@@ -96,7 +96,8 @@ mutable struct DynamicScreening{T} <: Policy
 end
 
 function DynamicScreening(screening_test::T;
-    pcr_turnaround::Int = 2, isolation_duration::Int = 14, followup_duration::Int = 7, followup_weekdays::Vector{Int} = collect(0:4)
+    pcr_turnaround::Int = 2, isolation_duration::Int = 14,
+    followup_duration::Int = 7, followup_weekdays::Vector{Int} = collect(0:4)
 ) where {T<:Test}
     DynamicScreening{T}(screening_test, pcr_turnaround, isolation_duration, followup_duration,
         followup_weekdays, 0, 0
