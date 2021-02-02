@@ -145,8 +145,8 @@ end
 
 function get_contact_log(indv::Individual)
     DataFrames.DataFrame(
-        uuid_a = indv.uuid,
-        uuid_b = indv.contacts_id,
+        uuid_a = string(indv.uuid),
+        uuid_b = string(indv.contacts_id),
         day = indv.contacts_day,
         got_infected = indv.contacts_got_infected,
         infected_other = indv.contacts_infected
@@ -156,7 +156,7 @@ get_contact_logs(indvs::Vector{T}) where {T<:Individual} = vcat(get_contact_log.
 
 function get_test_log(indv::Individual)
     DataFrames.DataFrame(
-        uuid = indv.uuid,
+        uuid = string(indv.uuid),
         day = indv.test_log_day,
         type = indv.test_log_type,
         result = indv.test_log_result,
@@ -185,7 +185,7 @@ function get_status_log(indv::Individual)
         end
     end
     res = DataFrames.DataFrame(
-        uuid = indv.uuid,
+        uuid = string(indv.uuid),
         day = days,
         infected = is_infected.(indv, days),
         viral_load = get_viral_load.(indv, days),

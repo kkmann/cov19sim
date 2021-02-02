@@ -16,7 +16,7 @@ LFD = LogPropTest("LFD", 5.0, 1/12, .997)
 println(get_viral_load.(indv, 0:5))
 
 for i = 1:10
-    println(conduct_test(LFD, indv))
+    println(conduct_test!(LFD, indv))
 end
 
 println(get_test_log(indv))
