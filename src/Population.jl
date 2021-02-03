@@ -4,6 +4,8 @@ length(x::Population) = 1
 iterate(x::Population) = (x, nothing)
 iterate(x::Population, state) = nothing
 
+n_individuals(pop::Population) = length(pop.individuals)
+
 function step!(pop::Population)
     test_and_isolate!.(pop.groups)
     meet!.(pop.groups)
@@ -32,54 +34,99 @@ function get_status_over_time(pop::Population)
     res
 end
 
-function get_contacts_over_time(pop::Population)
-    DataFramesMeta.@combine(
-        DataFrames.groupby(get_contact_logs(pop.individuals), :day),
-        contacts = length(:uuid_a)
+function get_mean_contacts_over_time(pop::Population)
+    res = DataFrames.leftjoin(
+        DataFrames.DataFrame(
+            day = 0:(now(pop.individuals[1]) - 1)
+            ),
+        DataFramesMeta.@combine(
+            DataFrames.groupby(get_contact_logs(pop.individuals), :day),
+            contacts = length(:uuid_a)
+        ),
+        on = :day
     )
+    # replace missing with 0
+    res[!, :contacts] .= Base.coalesce.(res[!, :contacts], 0) ./ n_individuals(pop)
+    res
 end
 
 function get_test_logs_over_time(pop::Population)
-    DataFramesMeta.@combine(
+    tmp = DataFramesMeta.@combine(
         DataFrames.groupby(get_test_logs(pop.individuals), [:type, :day]),
         count = length(:uuid)
     )
+    unique_types = unique(tmp[!,:type])
+    if length(unique_types) == 0
+        return DataFrames.DataFrame( # no tests
+            day = Vector{Int}(),
+            type = Vector{String}(),
+            count = Vector{Int}()
+        )
+    else
+        tbl_grid = DataFrames.DataFrame(
+            gridexpand(
+                0:(now(pop.individuals[1]) - 1),
+                unique_types
+            ),
+            ["day", "type"]
+        )
+        res = DataFrames.leftjoin(tbl_grid, tmp, on = [:day, :type])
+        res[!, :day] .= Int.(res[!, :day])
+        res[!, :type] .= string.(res[!, :type])
+        res[!, :count] .= Base.coalesce.(res[!, :count], 0)
+        return res
+    end
 end
 
-function evaluate(pop::Population)
-    n =  length(pop.individuals)
-    n_days = pop.individuals[1].current_day
-    logs = DataFramesMeta.@where(get_status_logs(pop), mod.(:day, 7) .<= 4)
-    tmp = DataFramesMeta.@combine(
-        DataFrames.groupby(
+n_infected(pop::Population) = sum(is_infected.(pop.individuals))
+
+function n_workdays_missed(pop::Population; workdays::Vector{Int} = collect(0:4))
+    DataFrames.nrow(
+        DataFramesMeta.@where(get_status_logs(pop), is_workday.(:day) .& :isolated)
+    )
+end
+
+function n_tests(pop::Population, type::String)
+    DataFrames.nrow(
         DataFramesMeta.@where(
-            DataFramesMeta.@combine(
-                DataFrames.groupby(get_status_logs(pop.individuals), [:day, :status]),
-                count = length(:day)
-            ),
-            (:status .== "infectious, asymptomatic") .| (:status .== "infectious, symptomatic")
-        ), :day),
-        count = sum(:count))
-    infectious = Base.coalesce.(
-        DataFrames.leftjoin(
-            DataFrames.DataFrame(day = 0:n_days),
-            tmp,
-            on = :day
-        )[!, :count], 0)
-    contacts = Base.coalesce.(
-        DataFrames.leftjoin(
-            DataFrames.DataFrame(day = 0:n_days),
-            get_contacts_over_time(pop),
-            on = :day
-        )[!, :contacts], 0) ./ n
-    tests = DataFramesMeta.@where(get_test_logs_over_time(pop), :type == "pcr")
+            get_test_logs(pop.individuals),
+            :type .== type
+        )
+    )
+end
+
+function n_infectious_per_day(pop::Population)
+    tbl_status = get_status_over_time(pop)
+    res = zeros(DataFrames.nrow(tbl_status))
+    if "infectious, asymptomatic" in names(tbl_status)
+        res += tbl_status[!, :"infectious, asymptomatic"]
+    end
+    if "infectious, symptomatic" in names(tbl_status)
+        res += tbl_status[!, :"infectious, symptomatic"]
+    end
+    res
+end
+
+mean_contacts_per_day(pop::Population) = get_mean_contacts_over_time(pop)[!, :contacts]
+
+function evaluate(pop::Population; workdays::Vector{Int} = collect(0:4))
+    n_infectious = n_infectious_per_day(pop)
+    mean_contacts = mean_contacts_per_day(pop)
+    # reduce to working days
+    mean_contacts = mean_contacts[
+        is_workday.(0:(length(mean_contacts) - 1); workdays = workdays)
+    ]
     DataFrames.DataFrame(
         id = string(uuid4()),
-        proportion_infected = sum([is_infected(ind) for ind in pop.individuals]) / n,
-        prop_workdays_missed = sum(logs[!, :isolated]) / DataFrames.nrow(logs),
-        mean_daily_infectious = Statistics.mean(infectious),
-        std_daily_infectious = Statistics.std(infectious),
-        mean_daily_pp_contacts = Statistics.mean(contacts),
-        mean_daily_pcr = Statistics.mean(tests[!, :count])
+        n_infected = n_infected(pop),
+        workdays_missed = n_workdays_missed(pop; workdays = workdays),
+        mean_daily_infectious = Statistics.mean(n_infectious),
+        std_daily_infectious = Statistics.std(n_infectious),
+        mean_daily_pp_contacts = Statistics.mean(mean_contacts),
+        n_pcr_tests = n_tests(pop, "pcr")
     )
+end
+
+function evaluate(pops::Vector{T}; workdays::Vector{Int} = collect(0:4)) where {T<:Population}
+    vcat(evaluate.(pops; workdays = workdays)...)
 end

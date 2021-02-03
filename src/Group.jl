@@ -19,6 +19,14 @@ function Group(individuals::Vector{T1}, policy::T2, pr::T3, meeting_days::Vector
     Group{T1,T2,T3}(string(uuid4()), individuals, policy, pr, meeting_days)
 end
 
+function now(group::Group)
+    days = now.(group.individuals)
+    if length(unique(days)) > 1
+        throw(InexactError("Group is not time-synced"))
+    end
+    days[1]
+end
+
 test_and_isolate!(group::Group) = test_and_isolate!(group.policy, group)
 
 function meet!(group::Group)

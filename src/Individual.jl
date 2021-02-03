@@ -72,7 +72,7 @@ end
 is_isolating(indv::Individual) = is_isolating(indv, indv.current_day)
 
 function isolate!(indv::Individual, duration::T) where {T<:Int}
-    if !is_isolating(indv)
+    if !is_isolating(indv) & (duration > 0)
         indv.isolation_stack = duration - 1 # remember how long to isolate for (-1 for including today!)
 		indv.isolation_log[indv.current_day + 1] = true # go into isolation directly
 	end
@@ -94,7 +94,9 @@ end
 
 function pcr_test_and_isolate!(indv::Individual, turnaround::Int, isolation::Int)
     # we assume perfect pcr testing
-    duration = turnaround + (is_infected(indv) ? isolation : 0)
+    pcr_positive = is_infected(indv)
+    duration = turnaround + (pcr_positive ? isolation : 0)
+    log_test!(indv, "pcr", pcr_positive)
     isolate!(indv, duration)
 end
 

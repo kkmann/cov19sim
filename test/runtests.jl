@@ -1,9 +1,11 @@
-using cov19sim, Test
+using cov19sim, Test, DataFrames, DataFramesMeta
 
-import Random.seed!
+import Random.seed!, Random.randperm
 seed!(42)
 
-include("tests/test_individual.jl")
-include("tests/test_LogPropTest.jl")
-include("tests/test_Group.jl")
-include("tests/test_ThreeLevelPopulation.jl")
+#include("tests/test_individual.jl")
+#include("tests/test_LogPropTest.jl")
+#include("tests/test_Group.jl")
+# include("tests/test_SymptomaticIsolation.jl")
+include("tests/test_RegularScreening.jl")
+include("tests/test_DynamicScreening.jl")

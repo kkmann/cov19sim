@@ -10,6 +10,8 @@ length(x::UUID) = 1
 iterate(x::UUID) = (x, nothing)
 iterate(x::UUID, state) = nothing
 
+include("util.jl")
+
 include("DiseaseTrajectory.jl")
 export DiseaseTrajectory
 export get_viral_load, is_symptomatic, has_recovered
@@ -31,7 +33,7 @@ export conduct_test!, type, sensitivity, specificity
 export LogPropTest
 
 include("Group.jl")
-export Group
+export Group, Policy
 export test_and_isolate!
 
 include("policies.jl")
@@ -39,7 +41,9 @@ export DoNothing, SymptomaticIsolation, RegularScreening, DynamicScreening
 
 include("Population.jl")
 export Population
-export get_status_over_time, evaluate
+export get_status_over_time, get_test_logs_over_time, get_mean_contacts_over_time, evaluate,
+n_individuals, n_infected, n_workdays_missed, n_tests, n_infectious_per_day,
+mean_contacts_per_day
 
 include("ThreeLevelPopulation.jl")
 export ThreeLevelPopulation
