@@ -130,3 +130,24 @@ end
 function evaluate(pops::Vector{T}; workdays::Vector{Int} = collect(0:4)) where {T<:Population}
     vcat(evaluate.(pops; workdays = workdays)...)
 end
+
+
+function get_adjacency_matrix(pop::Population)
+    n = length(pop.individuals)
+    A = Matrix{Float64}(undef, n, n)
+    for i = 1:n
+        A[i, i] = Inf64
+    end
+    for i = 1:(n - 1), j = (i + 1):n
+        a = pop.individuals[i]
+        b = pop.individuals[j]
+        A[i, j] = 0.0
+        for g in pop.groups
+            if is_member(a, g) & is_member(b, g)
+                A[i, j] += g.meeting_probability
+            end
+        end
+        A[j, i] = A[i, j]
+    end
+    return A
+end

@@ -10,4 +10,4 @@ for i in 1:30
     conduct_test!.(lfd2, individuals)
 end
 
-show( get_test_logs(individuals) )
+tmp = get_test_logs(individuals)

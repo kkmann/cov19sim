@@ -46,3 +46,5 @@ function meet!(group::Group)
         end
     end
 end
+
+is_member(indv::Individual, g::Group) = indv in g.individuals
