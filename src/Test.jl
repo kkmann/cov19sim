@@ -48,21 +48,23 @@ specificity(test::LogPropTest{T1}, indv::T2) where {T1<:Real,T2<:Individual} = t
 
 struct LogGLMTest{T} <: Test
     type::String
-    log10_lod::T
+    lod::T
     beta_vl::T
     beta_ranef::T
     intercept::T
     specificity::T
 end
 
-get_lod(test::LogGLMTest{T}) where {T<:Real} = 10 .^ test.log10_lod
+get_lod(test::LogGLMTest{T}) where {T<:Real} = test.lod
 specificity(test::LogGLMTest{T1}, indv::T2) where {T1<:Real,T2<:Individual} = test.specificity
 
 function sensitivity(test::LogGLMTest{T1}, indv::T2) where {T1<:Real,T2<:Individual}
-    viral_load = get_viral_load(indv)
-    elog10vl = max(0.0, log(10, viral_load) - test.log10_lod)
-    # inverse logit
-    1 / ( 1 + exp(-(
-        beta_vl*elog10vl + beta_ranef*indv.dm.u + test.intercept
-    )))
+    elog10vl = log(10, get_viral_load(indv) - test.lod)
+    if elog10vl <= 0
+        return 1 - test.specificity
+    else
+        return max(1 - test.specificity, 1 / ( 1 + exp(-(
+            test.beta_vl*elog10vl + test.beta_ranef*indv.dt.u + test.intercept
+        ))))
+    end
 end
