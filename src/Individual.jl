@@ -18,6 +18,7 @@ mutable struct Individual{T1,T2,T3}
     test_log_day::Vector{T3}
     test_log_type::Vector{String}
     test_log_vl::Vector{T2}
+    test_log_pr_pos::Vector{T2}
     test_log_result::Vector{Bool}
 end
 
@@ -31,7 +32,7 @@ function Individual(dm::T1, symptom_probability::T2) where {T1<:DiseaseModel,T2<
         dm, sample(dm), 2^30, symptom_probability, 0,
         falses(1), 0,
         Vector{Int}(undef, 0), Vector{UUID}(undef, 0), Vector{Bool}(undef, 0), Vector{Bool}(undef, 0),
-        Vector{Int}(undef, 0), Vector{String}(undef, 0), Vector{Bool}(undef, 0), Vector{Bool}(undef, 0)
+        Vector{Int}(undef, 0), Vector{String}(undef, 0), Vector{T2}(undef, 0), Vector{T2}(undef, 0), Vector{Bool}(undef, 0)
     )
 end
 
@@ -85,18 +86,19 @@ function log_contact!(a::Individual, b::Individual, a_infected_b::Bool, a_got_in
     push!(a.contacts_got_infected, a_got_infected)
 end
 
-function log_test!(indv::Individual, type::String, result::Bool)
+function log_test!(indv::Individual, type::String, result::Bool, pr_pos::T) where {T<:Real}
     push!(indv.test_log_day, indv.current_day)
     push!(indv.test_log_type, type)
     push!(indv.test_log_result, result)
     push!(indv.test_log_vl, get_viral_load(indv, indv.current_day))
+    push!(indv.test_log_pr_pos, pr_pos)
 end
 
 function pcr_test_and_isolate!(indv::Individual, turnaround::Int, isolation::Int)
     # we assume perfect pcr testing
     pcr_positive = is_infected(indv)
     duration = turnaround + (pcr_positive ? isolation : 0)
-    log_test!(indv, "pcr", pcr_positive)
+    log_test!(indv, "pcr", pcr_positive, pcr_positive)
     isolate!(indv, duration)
 end
 
@@ -162,7 +164,8 @@ function get_test_log(indv::Individual)
         day = indv.test_log_day,
         type = indv.test_log_type,
         result = indv.test_log_result,
-        viral_load = indv.test_log_vl
+        viral_load = indv.test_log_vl,
+        probability_positive = indv.test_log_pr_pos
     )
 end
 get_test_logs(indvs::Vector{T}) where {T<:Individual} = vcat(get_test_log.(indvs)...)

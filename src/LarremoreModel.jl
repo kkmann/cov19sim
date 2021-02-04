@@ -62,7 +62,7 @@ function sample(dm::LarremoreModel{T}) where {T<:Real}
     vlout = 10 .^ approxfun(tout)
     symptomatic = has_symptoms ? tout .>= tsymptoms : falses(length(tout))
 
-    DiseaseTrajectory{T}(vlout, symptomatic)
+    DiseaseTrajectory{T}(vlout, symptomatic, rand(Distributions.Normal(0, 1)))
 end
 
 

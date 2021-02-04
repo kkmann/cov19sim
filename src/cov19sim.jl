@@ -29,8 +29,8 @@ export now, pcr_test_and_isolate!, step!, steps!, infect!, meet!, get_status_log
 
 include("Test.jl")
 export Test
-export conduct_test!, type, sensitivity, specificity
-export LogPropTest
+export conduct_test!, type, get_lod, sensitivity, specificity
+export LogPropTest, LogGLMTest
 
 include("Group.jl")
 export Group, Policy

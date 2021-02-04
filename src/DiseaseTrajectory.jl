@@ -1,6 +1,7 @@
 struct DiseaseTrajectory{T}
     vl::Vector{T}
     symptomatic::Vector{Bool}
+    u::T # random effect for test sensitivity
 end
 
 length(dt::DiseaseTrajectory) = 1
