@@ -20,4 +20,10 @@ function has_recovered(DT::DiseaseTrajectory{T1}, day::T2) where {T1<:Real,T2<:I
     day >= length(DT.vl)
 end
 
+"""
+    duration(dt::DiseaseTrajectory)
+
+Returns the duration (in days) of the disease trajecotry `dt`, the duration is the number of days
+from the infection until the final clearance (viral load zero).
+"""
 duration(dt::DiseaseTrajectory) = length(dt.vl)

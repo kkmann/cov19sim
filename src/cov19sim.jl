@@ -14,7 +14,7 @@ include("util.jl")
 
 include("DiseaseTrajectory.jl")
 export DiseaseTrajectory
-export get_viral_load, is_symptomatic, has_recovered
+export get_viral_load, is_symptomatic, has_recovered, duration
 
 include("DiseaseModel.jl")
 export DiseaseModel
