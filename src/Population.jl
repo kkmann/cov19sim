@@ -82,7 +82,7 @@ n_infected(pop::Population) = sum(is_infected.(pop.individuals))
 
 function n_workdays_missed(pop::Population; workdays::Vector{Int} = collect(0:4))
     DataFrames.nrow(
-        DataFramesMeta.@where(get_status_logs(pop), is_workday.(:day) .& :isolated)
+        DataFramesMeta.@where(get_status_logs(pop), is_workday.(:day; workdays = workdays) .& :isolated)
     )
 end
 

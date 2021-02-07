@@ -73,7 +73,7 @@ function test_and_isolate!(pol::RegularScreening{T1}, gr::Group) where{T1<:Test}
         end
         isolate = is_symptomatic(x) | triggered
         if !isolate & (mod(now(x), 7) in pol.test_weekdays) # screening test?
-            global isolate = conduct_test!(pol.screening_test, x)
+            isolate = conduct_test!(pol.screening_test, x)
         end
         if !isolate
             push!(to_isolate, x) # add to list of individuals who need to isolate if something comes up
