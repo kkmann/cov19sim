@@ -28,6 +28,8 @@ function test_and_isolate!(pol::SymptomaticIsolation, gr::Group)
             any_new_pcr_positive = pcr_positive ? true : any_new_pcr_positive
         end
     end
+    println(now(gr))
+    println(any_new_pcr_positive)
     # adjust the isolation time for everyone
     if any_new_pcr_positive
         new_pattern = trues(pol.pcr_turnaround + pol.isolation_duration)
@@ -112,15 +114,15 @@ function DynamicScreening(screening_test::T;
 end
 
 function test_and_isolate!(pol::DynamicScreening{T1}, gr::Group) where{T1<:Test}
+    screen_today = (pol.buffer > 0) & (mod(now(gr), 7) in pol.followup_weekdays)
     # update buffer, make sure we are in sync with group timeline
     if pol.buffer_t <= now(gr)
         pol.buffer_t += 1
         # check that the weekday is a followup day!
-        if (pol.buffer > 0) & (now(gr.individuals[1]) in pol.followup_weekdays)
+        if screen_today
             pol.buffer -= 1
         end
     end
-    screen_today = (pol.buffer > 0) & (mod(now(gr), 7) in pol.followup_weekdays)
     to_screen = Vector{typeof(gr.individuals[1])}() # buffer for individuals to be screened that day
     followup_extension = 0 # days to put on follow up
     for x in gr.individuals

@@ -27,11 +27,7 @@ function now(group::Group)
     days[1]
 end
 
-function test_and_isolate!(group::Group)
-    if mod(now(group), 7) in group.meeting_days
-        test_and_isolate!(group.policy, group)
-    end
-end
+test_and_isolate!(group::Group) = test_and_isolate!(group.policy, group)
 
 function meet!(group::Group)
     n = length(group.individuals)
