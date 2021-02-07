@@ -47,7 +47,7 @@ function sample(dm::LarremoreModel{T}) where {T<:Real}
     l10vl_clearance = dm.l10vl_clearance
     l10final = 0
 
-    t0 = rand(Distributions.Uniform(-16/24, 8/24)) # sample infection time
+    t0 = rand(Distributions.Uniform(-16.5/24, 7.5/24)) # sample infection time
     t1 = t0 + rand(Distributions.Uniform(dm.day_onset_min, dm.day_onset_max))
     tpeak = t1 + rand(Distributions.Uniform(dm.day_onset_min, dm.day_onset_max))
     tsymptoms = tpeak + (has_symptoms ? rand(Distributions.Uniform(dm.symptom_delay_min, dm.symptom_delay_max)) : 0)
