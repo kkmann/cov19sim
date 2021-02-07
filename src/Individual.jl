@@ -72,9 +72,15 @@ function is_isolating(indv::Individual, day::T) where {T<:Int}
 end
 is_isolating(indv::Individual) = is_isolating(indv, indv.current_day)
 
-function isolate!(indv::Individual, isolation_pattern::Union{BitArray{1}, Vector{Bool}})
+function isolate!(indv::Individual, isolation_pattern::Union{BitArray{1}, Vector{Bool}}; add_only = false)
     for i = 1:length(isolation_pattern)
-        indv.isolation_stack[i] = isolation_pattern[i] # remember how long to isolate for (-1 for including today!)
+        if add_only
+            # only add new time
+            indv.isolation_stack[i] = isolation_pattern[i] ? true : indv.isolation_stack[i]
+        else
+            # overwrite completely!
+            indv.isolation_stack[i] = isolation_pattern[i] # remember how long to isolate for (-1 for including today!)
+        end
     end
     # apply the first element immediately
     indv.isolation_log[indv.current_day + 1] = popat!(indv.isolation_stack, 1)
