@@ -50,7 +50,7 @@ struct RegularScreening{T} <: Policy
 end
 
 function RegularScreening(screening_test::T;
-    pcr::Bool = true, pcr_turnaround::Int = 2, isolation_duration::Int = 14,
+    pcr::Bool = true, pcr_turnaround::Int = 2, isolation_duration::Int = 8,
     isolate_all::Bool = true, test_weekdays::Vector{Int} = collect(0:4)
 ) where {T<:Test}
     RegularScreening{T}(screening_test, pcr, pcr_turnaround, isolation_duration, isolate_all, test_weekdays)
@@ -103,7 +103,7 @@ mutable struct DynamicScreening{T} <: Policy
 end
 
 function DynamicScreening(screening_test::T;
-    pcr_turnaround::Int = 2, isolation_duration::Int = 14,
+    pcr_turnaround::Int = 2, isolation_duration::Int = 8,
     followup_duration::Int = 7, followup_weekdays::Vector{Int} = collect(0:4)
 ) where {T<:Test}
     DynamicScreening{T}(screening_test, pcr_turnaround, isolation_duration, followup_duration,
