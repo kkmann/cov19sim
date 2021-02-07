@@ -8,7 +8,7 @@ mutable struct Individual{T1,T2,T3}
 
     # logs etc
     isolation_log::Vector{Bool}
-    isolation_stack::T3
+    isolation_stack::Vector{Bool}
 
     contacts_day::Vector{T3}
     contacts_id::Vector{UUID}
@@ -26,11 +26,11 @@ length(indv::Individual) = 1
 iterate(indv::Individual) = (indv, nothing)
 iterate(indv::Individual, state) = nothing
 
-function Individual(dm::T1, symptom_probability::T2) where {T1<:DiseaseModel,T2<:Real}
+function Individual(dm::T1, symptom_probability::T2, isolation_timeframe::Int = 30) where {T1<:DiseaseModel,T2<:Real}
     Individual{T1,T2,Int}(
         uuid4(),
         dm, sample(dm), 2^30, symptom_probability, 0,
-        falses(1), 0,
+        falses(1), falses(isolation_timeframe),
         Vector{Int}(undef, 0), Vector{UUID}(undef, 0), Vector{Bool}(undef, 0), Vector{Bool}(undef, 0),
         Vector{Int}(undef, 0), Vector{String}(undef, 0), Vector{T2}(undef, 0), Vector{T2}(undef, 0), Vector{Bool}(undef, 0)
     )
@@ -72,11 +72,20 @@ function is_isolating(indv::Individual, day::T) where {T<:Int}
 end
 is_isolating(indv::Individual) = is_isolating(indv, indv.current_day)
 
-function isolate!(indv::Individual, duration::T) where {T<:Int}
-    if !is_isolating(indv) & (duration > 0)
-        indv.isolation_stack = duration - 1 # remember how long to isolate for (-1 for including today!)
-		indv.isolation_log[indv.current_day + 1] = true # go into isolation directly
-	end
+function isolate!(indv::Individual, isolation_pattern::Union{BitArray{1}, Vector{Bool}})
+    for i = 1:length(isolation_pattern)
+        indv.isolation_stack[i] = isolation_pattern[i] # remember how long to isolate for (-1 for including today!)
+    end
+    # apply the first element immediately
+    indv.isolation_log[indv.current_day + 1] = popat!(indv.isolation_stack, 1)
+    # and fill up again
+    push!(indv.isolation_stack, false)
+end
+
+isolate!(indv::Individual, duration::T) where {T<:Int} = isolate!(indv, trues(duration))
+
+function isolate!(indv::Individual, from::T, to::T) where {T<:Int}
+
 end
 
 function log_contact!(a::Individual, b::Individual, a_infected_b::Bool, a_got_infected::Bool)
@@ -100,15 +109,15 @@ function pcr_test_and_isolate!(indv::Individual, turnaround::Int, isolation::Int
     duration = turnaround + (pcr_positive ? isolation : 0)
     log_test!(indv, "pcr", pcr_positive, pcr_positive)
     isolate!(indv, duration)
+    return pcr_positive
 end
 
 function step!(indv::Individual)
-    if indv.isolation_stack > 0
-        push!(indv.isolation_log, true)
-        indv.isolation_stack -= 1
-    else
-        push!(indv.isolation_log, false)
-    end
+    # move the first element from the isolation stack (future behaviour) to
+    # the isolation log (past behaviour)
+    push!(indv.isolation_log, popat!(indv.isolation_stack, 1))
+    push!(indv.isolation_stack, false) # add no isolation at the end of the stack
+    # increase day counter by one
     indv.current_day += 1
 end
 function steps!(indv::Individual, n::Int)
