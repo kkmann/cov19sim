@@ -28,8 +28,6 @@ function test_and_isolate!(pol::SymptomaticIsolation, gr::Group)
             any_new_pcr_positive = pcr_positive ? true : any_new_pcr_positive
         end
     end
-    println(now(gr))
-    println(any_new_pcr_positive)
     # adjust the isolation time for everyone
     if any_new_pcr_positive
         new_pattern = trues(pol.pcr_turnaround + pol.isolation_duration)
