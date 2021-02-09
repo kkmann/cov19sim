@@ -9,8 +9,12 @@ iterate(x::Policy, state) = nothing
 
 
 
+
+
 struct DoNothing <: Policy end
 test_and_isolate!(pol::DoNothing, gr::Group) = return
+
+
 
 
 
@@ -37,6 +41,8 @@ function test_and_isolate!(pol::SymptomaticIsolation, gr::Group)
         end
     end
 end
+
+
 
 
 
@@ -88,6 +94,8 @@ function test_and_isolate!(pol::RegularScreening{T1}, gr::Group) where{T1<:Test}
         end
     end
 end
+
+
 
 
 
