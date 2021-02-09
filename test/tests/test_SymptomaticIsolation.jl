@@ -19,13 +19,13 @@ function sample_school(;
 end
 
 school1 = sample_school(
-    policy = SymptomaticIsolation(2, 8)
+    policy = SymptomaticIsolation()
 )
 infect!.(school1.individuals[randperm(n_individuals(school1))[1:5]])
 steps!(school1, 7*12)
 
 school2 = sample_school(
-    policy = SymptomaticIsolation(2, 19)
+    policy = SymptomaticIsolation(isolation_weekdays = [3, 4])
 )
 infect!.(school2.individuals[randperm(n_individuals(school2))[1:5]])
 steps!(school2, 7*12)

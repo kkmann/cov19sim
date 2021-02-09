@@ -2,7 +2,7 @@ seed!(42)
 
 dm = LarremoreModel(.05)
 school = ThreeLevelPopulation(
-    policy_bubble = SymptomaticIsolation(14, true),
+    policy_bubble = SymptomaticIsolation(),
     meeting_days = collect(0:4),
     disease_model = dm
 )

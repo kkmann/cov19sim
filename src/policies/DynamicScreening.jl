@@ -6,22 +6,30 @@ mutable struct DynamicScreening{T} <: Policy
     followup_weekdays::Vector{Int}
     buffer::Int
     buffer_t::Int
+    isolation_weekdays::Vector{Int}
 end
 
 
 
 function DynamicScreening(screening_test::T;
     pcr_turnaround::Int = 2, isolation_duration::Int = 8,
-    followup_duration::Int = 7, followup_weekdays::Vector{Int} = collect(0:4)
+    followup_duration::Int = 7, followup_weekdays::Vector{Int} = collect(0:4),
+    isolation_weekdays::Vector{Int} = Int[]
 ) where {T<:Test}
     DynamicScreening{T}(screening_test, pcr_turnaround, isolation_duration, followup_duration,
-        followup_weekdays, 0, 0
+        followup_weekdays, 0, 0, isolation_weekdays
     )
 end
 
 
 
 function test_and_isolate!(pol::DynamicScreening{T1}, gr::Group) where{T1<:Test}
+    # apply flat isolation
+    if mod(now(gr), 7) in pol.isolation_weekdays
+        for x in gr.individuals
+            isolate!(x, 1)
+        end
+    end
     screen_today = (pol.buffer > 0) & (mod(now(gr), 7) in pol.followup_weekdays)
     # update buffer, make sure we are in sync with group timeline
     if pol.buffer_t <= now(gr)

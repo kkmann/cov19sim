@@ -2,7 +2,7 @@ n = 5
 
 gr = Group(
     [Individual(LarremoreModel(0.05), 0.01) for i = 1:5],
-    SymptomaticIsolation(14, true),
+    DoNothing(),
     .33,
     collect(0:4)
 )

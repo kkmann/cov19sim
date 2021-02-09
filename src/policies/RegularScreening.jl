@@ -5,15 +5,17 @@ struct RegularScreening{T} <: Policy
     isolation_duration::Int
     isolate_all::Bool
     test_weekdays::Vector{Int}
+    isolation_weekdays::Vector{Int}
 end
 
 
 
 function RegularScreening(screening_test::T;
     pcr::Bool = true, pcr_turnaround::Int = 2, isolation_duration::Int = 8,
-    isolate_all::Bool = true, test_weekdays::Vector{Int} = collect(0:4)
+    isolate_all::Bool = true, test_weekdays::Vector{Int} = collect(0:4),
+    isolation_weekdays::Vector{Int} = Int[]
 ) where {T<:Test}
-    RegularScreening{T}(screening_test, pcr, pcr_turnaround, isolation_duration, isolate_all, test_weekdays)
+    RegularScreening{T}(screening_test, pcr, pcr_turnaround, isolation_duration, isolate_all, test_weekdays, isolation_weekdays)
 end
 
 
@@ -29,6 +31,12 @@ end
 
 
 function test_and_isolate!(pol::RegularScreening{T1}, gr::Group) where{T1<:Test}
+    # apply flat isolation
+    if mod(now(gr), 7) in pol.isolation_weekdays
+        for x in gr.individuals
+            isolate!(x, 1)
+        end
+    end
     to_isolate = Vector{typeof(gr.individuals[1])}()
     triggered = false
     for x in gr.individuals
