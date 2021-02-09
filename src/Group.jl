@@ -56,8 +56,8 @@ function get_adjacency_matrix(group::Group)
         A[i, i] = Inf64
     end
     for i = 1:(n - 1), j = (i + 1):n
-        a = pop.individuals[i]
-        b = pop.individuals[j]
+        a = group.individuals[i]
+        b = group.individuals[j]
         A[i, j] = 0.0
         if is_member(a, group) & is_member(b, group)
             A[i, j] += group.meeting_probability
