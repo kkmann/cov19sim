@@ -1,6 +1,10 @@
 
 abstract type Policy end
 
+
+
+
+
 mutable struct Group{T1,T2,T3}
     id::String
     individuals::Vector{T1}

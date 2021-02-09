@@ -36,8 +36,17 @@ include("Group.jl")
 export Group, Policy
 export test_and_isolate!
 
-include("policies.jl")
-export DoNothing, SymptomaticIsolation, RegularScreening, DynamicScreening
+include("Policy.jl")
+include("policies/DoNothing.jl")
+export DoNothing
+include("policies/SymptomaticIsolation.jl")
+export  SymptomaticIsolation
+include("policies/RegularScreening.jl")
+export RegularScreening
+include("policies/DynamicScreening.jl")
+export DynamicScreening
+include("policies/SplitGroup.jl")
+export SplitGroup
 
 include("Population.jl")
 export Population
