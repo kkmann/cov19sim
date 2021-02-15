@@ -20,7 +20,7 @@ function get_infection_probability(im::LogPropInfectionModel{T1}, dt::DiseaseTra
     if vl <= lli
         return 0.0
     end
-    min(1, max(0, im.gamma * log(10, vl) ) )
+    min(1, max(0, im.gamma*( log(10, vl) - log(10, im.lli) ) ) )
 end
 
 
