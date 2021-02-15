@@ -65,8 +65,8 @@ function sensitivity(test::LogGLMTest{T1}, indv::T2) where {T1<:Real,T2<:Individ
     if vl <= 0
         return 1 - test.specificity
     end
-    elog10vl = log(10, get_viral_load(indv) - test.lod)
-    intercept = log( test.pr_lod / (1 - test.pr_lod) )
+    elog10vl = log(10, get_viral_load(indv))
+    intercept = log( test.pr_lod / (1 - test.pr_lod) ) - test.beta_vl*log(10, test.lod)
     linpred = test.beta_vl*elog10vl + test.beta_u*indv.dt.u
     max(
         1 - test.specificity,

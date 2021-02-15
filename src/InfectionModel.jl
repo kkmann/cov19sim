@@ -39,7 +39,6 @@ function get_infection_probability(im::LogRegInfectionModel{T1}, dt::DiseaseTraj
     if vl <= 0
         return 0.0
     end
-    intercept = log( im.pr_lli / (1 - im.pr_lli) )
-    linpred = im.gamma * log(10, max(0, vl - im.lli)) # linear predictor of logreg
-    inverse_logit(linpred + intercept)
+    intercept = log( im.pr_lli / (1 - im.pr_lli)) - im.gamma*log(10, im.lli)
+    inverse_logit( im.gamma*log(10, vl) + intercept )
 end
