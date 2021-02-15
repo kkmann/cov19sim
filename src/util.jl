@@ -11,3 +11,5 @@ function gridexpand(arrays::AbstractVecOrMat...)
 end
 
 is_workday(day; workdays = collect(0:4)) = mod(day, 7) in workdays
+
+inverse_logit(x::T) where {T<:Real} = 1 / (1 + exp(-x))

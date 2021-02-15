@@ -1,4 +1,4 @@
-struct LarremoreModel{T} <: DiseaseModel
+struct LarremoreModel{T,IM} <: DiseaseModel
     frac_symptomatic::T
 
     l10vl_onset::T
@@ -17,23 +17,42 @@ struct LarremoreModel{T} <: DiseaseModel
 	clearance_delay_min::T
     clearance_delay_max::T
 
-	gamma::T
+	infection_model::IM
 end
+# constructor with default values (except infection model)
 function LarremoreModel(
-    gamma; # this is so completely arbitrary that a default makes no sense!
+    infection_model::InfectionModel;
     frac_symptomatic = 0.75,
     l10vl_onset = 3.0, day_onset_min = 2.5, day_onset_max = 3.5,
     l10vl_peak_min = 7.0, l10vl_peak_max = 11.0, peak_delay_max = 3.0, peak_delay_shape = 1.5,
 	symptom_delay_min = 0.0, symptom_delay_max = 3.0,
     l10vl_clearance = 6.0, clearance_delay_min = 4.0, clearance_delay_max = 9.0
 )
-    LarremoreModel{Float64}(
+    LarremoreModel{Float64,typeof(infection_model)}(
         frac_symptomatic,
         l10vl_onset, day_onset_min, day_onset_max,
         l10vl_peak_min, l10vl_peak_max, peak_delay_max, peak_delay_shape,
         symptom_delay_min, symptom_delay_max,
         l10vl_clearance, clearance_delay_min, clearance_delay_max,
-        gamma
+        infection_model
+    )
+end
+# constructor with log-reg default infection model (slope needs to be specified)
+function LarremoreModel(
+    gamma::Real;
+    frac_symptomatic = 0.75,
+    l10vl_onset = 3.0, day_onset_min = 2.5, day_onset_max = 3.5,
+    l10vl_peak_min = 7.0, l10vl_peak_max = 11.0, peak_delay_max = 3.0, peak_delay_shape = 1.5,
+	symptom_delay_min = 0.0, symptom_delay_max = 3.0,
+    l10vl_clearance = 6.0, clearance_delay_min = 4.0, clearance_delay_max = 9.0
+)
+    LarremoreModel{Float64,LogRegInfectionModel{Float64}}(
+        frac_symptomatic,
+        l10vl_onset, day_onset_min, day_onset_max,
+        l10vl_peak_min, l10vl_peak_max, peak_delay_max, peak_delay_shape,
+        symptom_delay_min, symptom_delay_max,
+        l10vl_clearance, clearance_delay_min, clearance_delay_max,
+        LogRegInfectionModel(gamma, 10^l10vl_clearance)
     )
 end
 
@@ -63,16 +82,4 @@ function sample(dm::LarremoreModel{T}) where {T<:Real}
     symptomatic = has_symptoms ? tout .>= tsymptoms : falses(length(tout))
 
     DiseaseTrajectory{T}(vlout, symptomatic, rand(Distributions.Normal(0, 1)))
-end
-
-
-function get_infection_probability(dm::LarremoreModel{T1}, dt::DiseaseTrajectory{T1}, day::T2)::T1 where
-    {T1<:Real,T2<:Int}
-    vl = get_viral_load(dt, day)
-    lli = 10^dm.l10vl_clearance
-    if vl <= lli
-        return 0.0
-    end
-    x = log(10, max(0, vl - lli)) # linear predictor of logreg
-    1 / (1 + exp(-dm.gamma*x)) # inverse logit
 end
