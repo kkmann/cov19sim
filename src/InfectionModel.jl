@@ -17,7 +17,7 @@ function get_infection_probability(im::LogPropInfectionModel{T1}, dt::DiseaseTra
     {T1<:Real,T2<:Int}
 
     vl = get_viral_load(dt, day)
-    if vl <= lli
+    if vl <= im.lli
         return 0.0
     end
     min(1, max(0, im.gamma*( log(10, vl) - log(10, im.lli) ) ) )
