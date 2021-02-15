@@ -1,35 +1,83 @@
-struct SymptomaticIsolation <: Policy
+struct SymptomaticIsolation{T} <: Policy
     pcr_turnaround::Int
     isolation_duration::Int
-    isolation_weekdays::Vector{Int}
+    screening_test_weekdays::Vector{Int}
+    fixed_isolation_weekdays::Vector{Int}
+    screening_test::T
 end
-function SymptomaticIsolation(; pcr_turnaround::Int = 2, isolation_duration::Int = 8, isolation_weekdays::Vector{Int} = Int[])
-    SymptomaticIsolation(pcr_turnaround, isolation_duration, isolation_weekdays)
+function SymptomaticIsolation(
+        screening_test::T;
+        pcr_turnaround::Int = 2,
+        isolation_duration::Int = 10,
+        screening_test_weekdays::Vector{Int} = Int[],
+        fixed_isolation_weekdays::Vector{Int} = Int[]
+    ) where {T<:Test}
+
+    SymptomaticIsolation{T}(pcr_turnaround, isolation_duration, screening_test_weekdays, fixed_isolation_weekdays, screening_test)
 end
 
 
 
 function test_and_isolate!(pol::SymptomaticIsolation, gr::Group)
-    # apply flat isolation
-    if mod(now(gr), 7) in pol.isolation_weekdays
+    # apply fixed-isolation
+    if mod(now(gr), 7) in pol.fixed_isolation_weekdays
         for x in gr.individuals
             isolate!(x, 1)
         end
     end
-    # screen all individuals, isolate all symptomatic and conduct pcr follow-up
-    any_new_pcr_positive = false
+    any_symptomatic = false
+    any_screening_test_positive = false
+    any_pcr_positive = false
     for x in gr.individuals
-        if is_symptomatic(x)
-            pcr_positive = pcr_test_and_isolate!(x, pol.pcr_turnaround,  pol.isolation_duration)
-            any_new_pcr_positive = pcr_positive ? true : any_new_pcr_positive
+        # check symptoms first
+        if is_symptomatic(x) # check symptoms, including those already isolating
+            any_symptomatic = true
+            pcr_test_positive = pcr_test!(x)
+            if pcr_test_positive
+                any_pcr_positive = true
+                isolate!(x, pol.isolation_duration) # full duration
+            else
+                isolate!(x, pol.pcr_turnaround) # only PCR turnaround time
+            end
+        end
+        # if screening weekday, apply screening tests to all non-isolating (excl. symtomatic)
+        if mod(now(gr), 7) in pol.screening_test_weekdays
+            if !is_isolating(x) & !is_symptomatic(x)
+                screening_test_positive = conduct_test!(pol.screening_test, x)
+                if screening_test_positive # PCR-test + immediately isolate individuals (if positive)
+                    any_screening_test_positive = true
+                    pcr_test_positive = pcr_test!(x)
+                    if pcr_test_positive
+                        any_pcr_positive = true
+                        isolate!(x, pol.isolation_duration) # full duration
+                    else
+                        isolate!(x, pol.pcr_turnaround) # only PCR turnaround time
+                    end
+                end
+            end
         end
     end
-    # adjust the isolation time for everyone
-    if any_new_pcr_positive
-        new_pattern = trues(pol.pcr_turnaround + pol.isolation_duration)
-        new_pattern[1:(pol.pcr_turnaround)] .= false
-        for x in gr.individuals
-            isolate!(x, new_pattern; add_only = true) # we do not want to 'unisolate' if already isolating for other reasons
+    # handle bubble isolation
+    if any_screening_test_positive
+        if any_pcr_positive
+            # all go into isolaion for full duration immediately
+            for x in gr.individuals
+                isolate!(x, pol.isolation_duration) # overwrites existing isolation
+            end
+        else
+            # all go into isolaion for turnaroudn time only
+            for x in gr.individuals
+                isolate!(x, pol.pcr_turnaround) # overwrites existing isolation
+            end
+        end
+    else
+        # no screening positives, only go into isolation when positive PCR comes back
+        if any_pcr_positive
+            new_pattern = trues(pol.isolation_duration)
+            new_pattern[1:(pol.pcr_turnaround)] .= false
+            for x in gr.individuals
+                isolate!(x, new_pattern; add_only = true) # do no overwrite non-isolation within turnaround!
+            end
         end
     end
 end

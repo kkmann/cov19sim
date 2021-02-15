@@ -1,27 +1,33 @@
 seed!(42)
 
-function sample_school(;
-    gamma = 0.05,
-    schooldays = collect(0:4),
-    policy = DoNothing(),
-    pr_symptoms = 0.00
-)
-	dm = LarremoreModel(
-		gamma;
-	    frac_symptomatic = 0.5
+test = FixedTest("lfd", .5, .997)
+
+function f(;
+		gamma = 0.25,
+		schooldays = collect(0:4),
+		policy = DoNothing(),
+		pr_symptoms = 0.01
 	)
-    ThreeLevelPopulation(
-	    policy_bubble = policy,
-	    meeting_days = schooldays,
-	    disease_model = dm,
-	    pr_unrelated_symptoms = pr_symptoms
-    )
+
+	dm = LarremoreModel(gamma; frac_symptomatic = 0.5)
+	school = ThreeLevelPopulation(
+		policy_bubble = policy,
+		meeting_days = schooldays,
+		disease_model = dm,
+		pr_unrelated_symptoms = pr_symptoms
+	)
+	infect!.(school.individuals[randperm(n_individuals(school))[1:5]])
+	steps!(school, 7*6)
+	school
 end
 
-school = sample_school(
-    policy = SplitGroup()
-)
-infect!.(school.individuals[randperm(n_individuals(school1))[1:5]])
-steps!(school, 7*12)
-
-show(evaluate(school))
+show(evaluate( [
+	f(policy = SplitGroup(test)),
+	f(policy = SplitGroup(test, screening_test_weekdays = [0, 2])),
+	f(policy = SplitGroup(test, a_days = collect(0:4), b_days = collect(0:4))),
+	f(policy = SplitGroup(test, a_days = collect(0:4), b_days = collect(0:4))),
+	f(policy = SplitGroup(test, a_days = collect(0:4), b_days = collect(0:4))),
+	f(policy = SymptomaticIsolation(test)),
+	f(policy = SymptomaticIsolation(test)),
+	f(policy = SymptomaticIsolation(test))
+] ))

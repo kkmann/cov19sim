@@ -109,11 +109,17 @@ function log_test!(indv::Individual, type::String, result::Bool, pr_pos::T) wher
     push!(indv.test_log_pr_pos, pr_pos)
 end
 
-function pcr_test_and_isolate!(indv::Individual, turnaround::Int, isolation::Int)
+function pcr_test!(indv::Individual)
     # we assume perfect pcr testing
     pcr_positive = is_infected(indv)
-    duration = turnaround + (pcr_positive ? isolation : 0)
     log_test!(indv, "pcr", pcr_positive, pcr_positive)
+    return pcr_positive
+end
+
+function pcr_test_and_isolate!(indv::Individual, turnaround::Int, isolation::Int)
+    # we assume perfect pcr testing
+    pcr_positive = pcr_test!(indv)
+    duration = pcr_positive ? isolation : turnaround
     isolate!(indv, duration)
     return pcr_positive
 end

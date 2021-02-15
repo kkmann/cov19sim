@@ -17,6 +17,17 @@ end
 
 
 
+struct FixedTest{T} <: Test
+    type::String
+    sensitivity::T
+    specificity::T
+end
+FixedTest(type::String, sensitivity::T, specificity::T) where {T<:Real} = FixedTest{T}(type, sensitivity, specificity)
+
+sensitivity(test::FixedTest{T1}, indv::T2) where {T1<:Real,T2<:Individual} = test.sensitivity
+specificity(test::FixedTest{T1}, indv::T2) where {T1<:Real,T2<:Individual} = test.specificity
+
+
 
 struct LogPropTest{T} <: Test
     type::String

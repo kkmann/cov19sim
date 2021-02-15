@@ -1,18 +1,14 @@
 seed!(42)
 
-lfd_test = LogPropTest(
-	"lfd",
-	5.0, # log-10 VL LOD
-	1/12, # log-10 excess VL proportionality constant for sensitivity
-	.997 # specificity
-)
+test = FixedTest("lfd", .5, .997)
 
-function eval(;
-    gamma = 0.05,
-    schooldays = collect(0:4),
-    policy = DoNothing(),
-	pr_symptoms = 0.00
-)
+function f(;
+		gamma = 0.25,
+		schooldays = collect(0:4),
+		policy = DoNothing(),
+		pr_symptoms = 0.01
+	)
+
 	dm = LarremoreModel(gamma; frac_symptomatic = 0.5)
 	school = ThreeLevelPopulation(
 		policy_bubble = policy,
@@ -21,12 +17,11 @@ function eval(;
 		pr_unrelated_symptoms = pr_symptoms
 	)
 	infect!.(school.individuals[randperm(n_individuals(school))[1:5]])
-	steps!(school, 7*12)
-    res = evaluate(school)
-    res.n_lfd_tests = [n_tests(school, "lfd")]
-    select(res, Not(:id))
+	steps!(school, 7*6)
+    school
 end
 
-show(vcat(
-	eval(policy = DynamicScreening(lfd_test))
-))
+show(evaluate( [
+	f(policy = DynamicScreening(test)),
+	f(policy = DynamicScreening(test, screening_test_weekdays = [0, 2]))
+] ))
