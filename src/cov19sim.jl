@@ -28,13 +28,13 @@ export LarremoreModel
 
 include("Individual.jl")
 export Individual
-export now, pcr_test_and_isolate!, step!, steps!, infect!, meet!, get_status_log, get_contact_log, log_test!, get_test_log,
+export now, step!, steps!, infect!, meet!, get_status_log, get_contact_log, log_test!, get_test_log,
     get_status_logs, get_contact_logs, get_test_logs, is_infected
 
 include("Test.jl")
 export Test
 export conduct_test!, type, sensitivity, specificity
-export FixedTest, LogPropTest, LogRegTest
+export FixedTest, LogRegTest
 
 include("Group.jl")
 export Group, Policy

@@ -19,30 +19,22 @@ end
 
 struct FixedTest{T} <: Test
     type::String
+    lod::T
     sensitivity::T
     specificity::T
 end
-FixedTest(type::String, sensitivity::T, specificity::T) where {T<:Real} = FixedTest{T}(type, sensitivity, specificity)
+FixedTest(type::String, sensitivity::T, specificity::T; lod::T = 0.0) where {T<:Real} = FixedTest{T}(type, lod, sensitivity, specificity)
 
-sensitivity(test::FixedTest{T1}, indv::T2) where {T1<:Real,T2<:Individual} = test.sensitivity
+standard_pcr_test = FixedTest("pcr", .975, 1.0; lod = 150.0)
+
+function sensitivity(test::FixedTest{T1}, indv::T2) where {T1<:Real,T2<:Individual}
+    if get_viral_load(indv) > test.lod
+        return test.sensitivity
+    else
+        return 1 - test.specificity
+    end
+end
 specificity(test::FixedTest{T1}, indv::T2) where {T1<:Real,T2<:Individual} = test.specificity
-
-
-
-struct LogPropTest{T} <: Test
-    type::String
-    log10_lod::T
-    slope::T
-    specificity::T
-end
-
-function sensitivity(test::LogPropTest{T1}, indv::T2) where {T1<:Real,T2<:Individual}
-    viral_load = get_viral_load(indv)
-    elog10vl = max(0.0, log(10, viral_load) - test.log10_lod)
-    min(1, max(0, test.slope * elog10vl))
-end
-
-specificity(test::LogPropTest{T1}, indv::T2) where {T1<:Real,T2<:Individual} = test.specificity
 
 
 

@@ -90,10 +90,6 @@ end
 
 isolate!(indv::Individual, duration::T) where {T<:Int} = isolate!(indv, trues(duration))
 
-function isolate!(indv::Individual, from::T, to::T) where {T<:Int}
-
-end
-
 function log_contact!(a::Individual, b::Individual, a_infected_b::Bool, a_got_infected::Bool)
     push!(a.contacts_day, a.current_day)
     push!(a.contacts_id, b.uuid)
@@ -107,21 +103,6 @@ function log_test!(indv::Individual, type::String, result::Bool, pr_pos::T) wher
     push!(indv.test_log_result, result)
     push!(indv.test_log_vl, get_viral_load(indv, indv.current_day))
     push!(indv.test_log_pr_pos, pr_pos)
-end
-
-function pcr_test!(indv::Individual)
-    # we assume perfect pcr testing
-    pcr_positive = is_infected(indv)
-    log_test!(indv, "pcr", pcr_positive, pcr_positive)
-    return pcr_positive
-end
-
-function pcr_test_and_isolate!(indv::Individual, turnaround::Int, isolation::Int)
-    # we assume perfect pcr testing
-    pcr_positive = pcr_test!(indv)
-    duration = pcr_positive ? isolation : turnaround
-    isolate!(indv, duration)
-    return pcr_positive
 end
 
 function step!(indv::Individual)

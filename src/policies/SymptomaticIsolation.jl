@@ -1,19 +1,24 @@
-struct SymptomaticIsolation{T} <: Policy
+struct SymptomaticIsolation{T,PCR} <: Policy
     pcr_turnaround::Int
     isolation_duration::Int
     screening_test_weekdays::Vector{Int}
     fixed_isolation_weekdays::Vector{Int}
     screening_test::T
+    pcr_test::PCR
 end
 function SymptomaticIsolation(
         screening_test::T;
         pcr_turnaround::Int = 2,
         isolation_duration::Int = 10,
         screening_test_weekdays::Vector{Int} = Int[],
-        fixed_isolation_weekdays::Vector{Int} = Int[]
-    ) where {T<:Test}
+        fixed_isolation_weekdays::Vector{Int} = Int[],
+        pcr_test::PCR = standard_pcr_test
+    ) where {T<:Test,PCR<:Test}
 
-    SymptomaticIsolation{T}(pcr_turnaround, isolation_duration, screening_test_weekdays, fixed_isolation_weekdays, screening_test)
+    if type(pcr_test) != "pcr"
+        throw(InexactError("pcr test must be called 'pcr'!"))
+    end
+    SymptomaticIsolation{T,PCR}(pcr_turnaround, isolation_duration, screening_test_weekdays, fixed_isolation_weekdays, screening_test, pcr_test)
 end
 
 
@@ -32,7 +37,7 @@ function test_and_isolate!(pol::SymptomaticIsolation, gr::Group)
         # check symptoms first
         if is_symptomatic(x) # check symptoms, including those already isolating
             any_symptomatic = true
-            pcr_test_positive = pcr_test!(x)
+            pcr_test_positive = conduct_test!(pol.pcr_test, x)
             if pcr_test_positive
                 any_pcr_positive = true
                 isolate!(x, pol.isolation_duration) # full duration
@@ -46,7 +51,7 @@ function test_and_isolate!(pol::SymptomaticIsolation, gr::Group)
                 screening_test_positive = conduct_test!(pol.screening_test, x)
                 if screening_test_positive # PCR-test + immediately isolate individuals (if positive)
                     any_screening_test_positive = true
-                    pcr_test_positive = pcr_test!(x)
+                    pcr_test_positive = conduct_test!(pol.pcr_test, x)
                     if pcr_test_positive
                         any_pcr_positive = true
                         isolate!(x, pol.isolation_duration) # full duration

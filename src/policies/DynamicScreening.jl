@@ -1,4 +1,4 @@
-mutable struct DynamicScreening{T} <: Policy
+mutable struct DynamicScreening{T,PCR} <: Policy
     screening_test::T
     pcr_turnaround::Int
     isolation_duration::Int
@@ -6,6 +6,7 @@ mutable struct DynamicScreening{T} <: Policy
     followup_weekdays::Vector{Int}
     fixed_isolation_weekdays::Vector{Int}
     screening_test_weekdays::Vector{Int}
+    pcr_test::PCR
     buffer::Int
 end
 
@@ -15,10 +16,15 @@ function DynamicScreening(screening_test::T;
     pcr_turnaround::Int = 2, isolation_duration::Int = 10,
     followup_duration::Int = 7, followup_weekdays::Vector{Int} = collect(0:4),
     fixed_isolation_weekdays::Vector{Int} = Int[],
-    screening_test_weekdays::Vector{Int} = Int[]
-) where {T<:Test}
-    DynamicScreening{T}(screening_test, pcr_turnaround, isolation_duration, followup_duration,
-        followup_weekdays, fixed_isolation_weekdays, screening_test_weekdays,
+    screening_test_weekdays::Vector{Int} = Int[],
+    pcr_test::PCR = standard_pcr_test
+) where {T<:Test,PCR<:Test}
+
+    if type(pcr_test) != "pcr"
+        throw(InexactError("pcr test must be called 'pcr'!"))
+    end
+    DynamicScreening{T,PCR}(screening_test, pcr_turnaround, isolation_duration, followup_duration,
+        followup_weekdays, fixed_isolation_weekdays, screening_test_weekdays, pcr_test,
         0
     )
 end
@@ -38,7 +44,7 @@ function test_and_isolate!(pol::DynamicScreening{T1}, gr::Group) where{T1<:Test}
     for x in gr.individuals
         if is_symptomatic(x) # check symptoms for all (incl, already isolating ones)
             ANY_SYMPTOMATIC = true
-            if pcr_test!(x)
+            if conduct_test!(pol.pcr_test, x)
                 ANY_PCR_POSITIVE = true
                 isolate!(x, pol.isolation_duration) # full duration
             else
@@ -65,7 +71,7 @@ function test_and_isolate!(pol::DynamicScreening{T1}, gr::Group) where{T1<:Test}
             is_isolating(x) ? continue : nothing # skip already isolating individuals
             if conduct_test!(pol.screening_test, x)
                 ANY_SCREENING_POSITIVE = true
-                if pcr_test!(x) # PCR follow-up
+                if conduct_test!(pol.pcr_test, x) # PCR follow-up
                     ANY_PCR_POSITIVE = true
                     isolate!(x, pol.isolation_duration) # full duration
                 else
