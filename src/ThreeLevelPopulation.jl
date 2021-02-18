@@ -1,6 +1,7 @@
 mutable struct ThreeLevelPopulation{T1} <: Population
     individuals::Vector{T1}
     groups::Vector{Any}
+    initial_parameters::Dict
 end
 
 function ThreeLevelPopulation(;
@@ -17,6 +18,20 @@ function ThreeLevelPopulation(;
     disease_model = LarremoreModel(0.033),
     pr_unrelated_symptoms = 0.01
 )
+    initial_parameters = Dict(
+        :n_per_bubble => n_per_bubble,
+        :bubbles_per_class => bubbles_per_class,
+        :m_classes => m_classes,
+        :pr_meet_bubble => pr_meet_bubble,
+        :pr_meet_class => pr_meet_class,
+        :pr_meet_school => pr_meet_school,
+        :policy_bubble => policy_bubble,
+        :policy_class => policy_class,
+        :policy_school => policy_school,
+        :meeting_days => meeting_days,
+        :disease_model => disease_model,
+        :pr_unrelated_symptoms => pr_unrelated_symptoms
+    )
     bubbles = []
     for i in 1:(bubbles_per_class*m_classes)
         bubble_individuals = [Individual(disease_model, pr_unrelated_symptoms) for j = 1:n_per_bubble]
@@ -29,5 +44,9 @@ function ThreeLevelPopulation(;
     end
     individuals = vcat([classes[i].individuals for i = 1:length(classes)]...)
     school = Group(individuals, deepcopy(policy_school), pr_meet_school, meeting_days)
-    ThreeLevelPopulation{typeof(individuals[1])}(individuals, vcat(bubbles, classes, school))
+    ThreeLevelPopulation{typeof(individuals[1])}(individuals, vcat(bubbles, classes, school), initial_parameters)
+end
+
+function resample(population::ThreeLevelPopulation{I}) where {I<:Individual}
+    ThreeLevelPopulation(; population.initial_parameters...)
 end

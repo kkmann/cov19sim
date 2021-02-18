@@ -54,7 +54,7 @@ include("Population.jl")
 export Population
 export get_status_over_time, get_test_logs_over_time, get_mean_contacts_over_time, evaluate,
 n_individuals, n_infected, n_workdays_missed, n_tests, n_infectious_per_day,
-mean_contacts_per_day, get_adjacency_matrix
+mean_contacts_per_day, get_adjacency_matrix, resample
 
 include("ThreeLevelPopulation.jl")
 export ThreeLevelPopulation

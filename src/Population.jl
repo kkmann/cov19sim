@@ -6,6 +6,8 @@ iterate(x::Population, state) = nothing
 
 n_individuals(pop::Population) = length(pop.individuals)
 
+resample(population::Population) = throw(MethoError("not implemented"))
+
 function step!(pop::Population)
     test_and_isolate!.(pop.groups)
     meet!.(pop.groups)

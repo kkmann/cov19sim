@@ -12,3 +12,5 @@ steps!(school, 7*12)
 
 A = get_adjacency_matrix(school)
 @test minimum(A) >= 0
+
+resample(school)
