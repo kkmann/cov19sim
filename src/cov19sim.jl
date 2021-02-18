@@ -33,7 +33,7 @@ export now, step!, steps!, infect!, meet!, get_status_log, get_contact_log, log_
 
 include("Test.jl")
 export Test
-export conduct_test!, type, sensitivity, specificity
+export conduct_test!, type, sensitivity, specificity, get_probability_positive
 export FixedTest, LogRegTest
 
 include("Group.jl")
