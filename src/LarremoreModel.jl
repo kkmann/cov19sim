@@ -79,7 +79,7 @@ function sample(dm::LarremoreModel{T}) where {T<:Real}
     approxfun = Interpolations.LinearInterpolation(t, l10vl; extrapolation_bc = Interpolations.Flat())
     tout = collect(0:ceil(tfinal)) .+ 7.5/24
     vlout = 10 .^ approxfun(tout)
-    symptomatic = has_symptoms ? ( (tout .>= tsymptoms) .& (log.(vlout, 10) .>= l10vl_clearance) ) : falses(length(tout))
+    symptomatic = has_symptoms ? ( (tout .>= tsymptoms) .& (log10.(vlout) .>= l10vl_clearance) ) : falses(length(tout))
 
     DiseaseTrajectory{T}(vlout, symptomatic, rand(Distributions.Normal(0, 1)))
 end
