@@ -40,7 +40,7 @@ end
 # constructor with log-reg default infection model (slope needs to be specified)
 function LarremoreModel(
     gamma::Real;
-    frac_symptomatic = 0.75,
+    frac_symptomatic = 0.5,
     l10vl_onset = 3.0, day_onset_min = 2.5, day_onset_max = 3.5,
     l10vl_peak_min = 7.0, l10vl_peak_max = 11.0, peak_delay_max = 3.0, peak_delay_shape = 1.5,
 	symptom_delay_min = 0.0, symptom_delay_max = 3.0,
@@ -79,7 +79,7 @@ function sample(dm::LarremoreModel{T}) where {T<:Real}
     approxfun = Interpolations.LinearInterpolation(t, l10vl; extrapolation_bc = Interpolations.Flat())
     tout = collect(0:ceil(tfinal)) .+ 7.5/24
     vlout = 10 .^ approxfun(tout)
-    symptomatic = has_symptoms ? tout .>= tsymptoms : falses(length(tout))
+    symptomatic = has_symptoms ? ( (tout .>= tsymptoms) .& (log.(vlout, 10) .>= l10vl_clearance) ) : falses(length(tout))
 
     DiseaseTrajectory{T}(vlout, symptomatic, rand(Distributions.Normal(0, 1)))
 end
