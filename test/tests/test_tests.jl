@@ -2,10 +2,30 @@ dm = LarremoreModel(0.033)
 
 individuals = [Individual(dm, 0.01) for i in 1:10]
 infect!.(individuals)
-lfd2 = LogRegTest("lfd-2", 0.76, .5, -3.81, .997)
+lfd = LogRegTest("lfd", 0.76, -3.81, .998)
 for i in 1:30
     step!.(individuals)
-    conduct_test!.(lfd2, individuals)
+    conduct_test!.(lfd, individuals)
 end
 
 tmp = get_test_logs(individuals)
+
+
+
+# check that autoregressive components works!
+individual = Individual(dm, 0.0)
+infect!(individual)
+# fix the viral load
+individual.dt.vl .= 10.0
+lfd = FixedTest("lfd", .5, 1.0; ar_window = 2, ar_coefficient = 0.75)
+@test get_probability_positive(lfd, individual) == 0.5
+step!(individual)
+@test get_probability_positive(lfd, individual) == 0.5
+conduct_test!(lfd, individual)
+individual.test_log_result[1] = true # guarantee that te test is positive
+@test get_probability_positive(lfd, individual) == 0.75 + 0.25*0.5
+step!(individual)
+step!(individual)
+@test get_probability_positive(lfd, individual) == 0.75 + 0.25*0.5
+step!(individual)
+@test get_probability_positive(lfd, individual) == 0.5

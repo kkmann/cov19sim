@@ -26,7 +26,7 @@ length(indv::Individual) = 1
 iterate(indv::Individual) = (indv, nothing)
 iterate(indv::Individual, state) = nothing
 
-function Individual(dm::T1, symptom_probability::T2, isolation_timeframe::Int = 30) where {T1<:DiseaseModel,T2<:Real}
+function Individual(dm::T1, symptom_probability::T2; isolation_timeframe::Int = 30) where {T1<:DiseaseModel,T2<:Real}
     Individual{T1,T2,Int}(
         uuid4(),
         dm, sample(dm), 2^30, symptom_probability, 0,

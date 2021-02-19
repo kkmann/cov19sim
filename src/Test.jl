@@ -11,13 +11,35 @@ specificity(test::T) where {T<:Test} = test.specificity # default
 sensitivity(test::T1, vl::T2, u::T3) where {T1<:Test,T2<:Real,T3<:Real} = throw(MethodError("not implemented"))
 sensitivity(test::T, indv::I) where {T<:Test,I<:Individual} = sensitivity(test, get_viral_load(indv), indv.dt.u)
 
+get_ar_window(test::T) where{T<:Test} = test.ar_window
+get_ar_coefficient(test::T) where{T<:Test} = test.ar_coefficient
+
 function get_probability_positive(test::T, vl::F1, u::F2) where {T<:Test,F1<:Real,F2<:Real}
    max(
        1 - specificity(test),
        sensitivity(test, vl, u)
     )
 end
-get_probability_positive(test::T, indv::I) where {T<:Test,I<:Individual} = get_probability_positive(test, get_viral_load(indv), indv.dt.u)
+function get_probability_positive(test::T, indv::I) where {T<:Test,I<:Individual}
+    pr = get_probability_positive(test, get_viral_load(indv), indv.dt.u)
+    n_log = length(indv.test_log_type)
+    k = get_ar_window(test)
+    if n_log > 0
+        # look thorugh logs backwards till last test of same type
+        for i in n_log:-1:1
+            if now(indv) - indv.test_log_day[i] <= k
+                if indv.test_log_type[i] == type(test)
+                    a = get_ar_coefficient(test)
+                    pr = (1 - a)*pr + a*indv.test_log_result[i]
+                    break # found it, stop loop
+                end
+            else
+                break # test log is sorted in time, stop searching backwards
+            end
+        end
+    end
+    pr
+end
 
 function conduct_test!(test::Test, indv::Individual)
     pr = get_probability_positive(test, indv)
@@ -33,8 +55,10 @@ struct FixedTest{T} <: Test
     lod::T
     sensitivity::T
     specificity::T
+    ar_window::Int
+    ar_coefficient::T
 end
-FixedTest(type::String, sensitivity::T, specificity::T; lod::T = 0.0) where {T<:Real} = FixedTest{T}(type, lod, sensitivity, specificity)
+FixedTest(type::String, sensitivity::T, specificity::T; lod::T = 0.0, ar_window::Int = 0, ar_coefficient::T = 0.0) where {T<:Real} = FixedTest{T}(type, lod, sensitivity, specificity, ar_window, ar_coefficient)
 standard_pcr_test = FixedTest("pcr", .975, 1.0; lod = 150.0)
 
 sensitivity(test::FixedTest{T1}, vl::T2, u::T3) where {T1<:Real,T2<:Real,T3<:Real} = test.sensitivity
@@ -43,12 +67,15 @@ sensitivity(test::FixedTest{T1}, vl::T2, u::T3) where {T1<:Real,T2<:Real,T3<:Rea
 
 struct LogRegTest{T} <: Test
     type::String
-    beta_vl::T
-    beta_u::T
+    slope::T
     intercept::T
     specificity::T
+    ar_window::Int
+    ar_coefficient::T
 end
+LogRegTest(type::String, slope::T, intercept::T, specificity::T; ar_window::Int = 0, ar_coefficient::T = 0.0) where {T<:Real} =
+    LogRegTest{T}(type, slope, intercept, specificity, ar_window, ar_coefficient)
 
 function sensitivity(test::LogRegTest{T1}, vl::T2, u::T3) where {T1<:Real,T2<:Real,T3<:Real}
-    inverse_logit( test.beta_vl*log(10, vl) + test.beta_u*u + test.intercept )
+    inverse_logit( test.slope*log10(vl) + test.intercept )
 end
