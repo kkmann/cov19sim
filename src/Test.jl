@@ -56,7 +56,7 @@ end
 FixedTest(type::String, sensitivity::T, specificity::T; lod::T = 0.0, ar_window::Int = 0, ar_coefficient::T = 0.0) where {T<:Real} = FixedTest{T}(type, lod, sensitivity, specificity, ar_window, ar_coefficient)
 standard_pcr_test = FixedTest("pcr", .975, 1.0; lod = 150.0)
 
-sensitivity(test::FixedTest{T1}, vl::T2) where {T1<:Real,T2<:Real} = test.sensitivity
+sensitivity(test::FixedTest{T1}, vl::T2) where {T1<:Real,T2<:Real} = vl >= test.lod ? test.sensitivity : 0.0
 
 
 
