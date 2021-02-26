@@ -7,36 +7,8 @@ dm = LarremoreModel(
     .25 # infectivtiy
 )
 
-indv1 = Individual(dm, 0.01)
+indv1 = Individual(dm, 0.01; a = 2/30, b = 1/30)
+
+println([Individual(dm, 0.01; a = 2/3, b = 1/3).compliance for i = 1:10])
 
 @test indv1.current_day == 0
-indv1.current_day = 1
-println(indv1.current_day)
-println(indv1.day_infected)
-infect!(indv1)
-println(indv1.day_infected)
-
-
-indv1 = Individual(dm, 0.01)
-indv2 = Individual(dm, 0.01)
-
-println(get_contact_log(indv1))
-
-infect!(indv1)
-steps!(indv1, 5)
-steps!(indv2, 5)
-println(get_infection_probability(indv1, 5))
-for i = 1:25
-    meet!(indv1, indv2)
-end
-
-println(get_contact_log(indv1))
-
-
-println(get_status_log(indv1))
-
-log_test!(indv1, "bla", true)
-println(get_test_log(indv1))
-
-
-println(get_status_logs([indv1, indv2]))

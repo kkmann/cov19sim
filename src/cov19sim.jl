@@ -47,8 +47,6 @@ include("policies/SymptomaticIsolation.jl")
 export  SymptomaticIsolation
 include("policies/DynamicScreening.jl")
 export DynamicScreening
-include("policies/SplitGroup.jl")
-export SplitGroup
 
 include("Population.jl")
 export Population

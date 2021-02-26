@@ -44,7 +44,7 @@ function test_and_isolate!(pol::DynamicScreening{T1}, gr::Group) where{T1<:Test}
     for x in gr.individuals
         if is_symptomatic(x) # check symptoms for all (incl, already isolating ones)
             ANY_SYMPTOMATIC = true
-            if conduct_test!(pol.pcr_test, x)
+            if is_positive(conduct_test!(pol.pcr_test, x))
                 ANY_PCR_POSITIVE = true
                 isolate!(x, pol.isolation_duration) # full duration
             else
@@ -69,9 +69,9 @@ function test_and_isolate!(pol::DynamicScreening{T1}, gr::Group) where{T1<:Test}
         end
         for x in gr.individuals
             is_isolating(x) ? continue : nothing # skip already isolating individuals
-            if conduct_test!(pol.screening_test, x)
+            if is_positive(conduct_test!(pol.screening_test, x))
                 ANY_SCREENING_POSITIVE = true
-                if conduct_test!(pol.pcr_test, x) # PCR follow-up
+                if is_positive(conduct_test!(pol.pcr_test, x)) # PCR follow-up
                     ANY_PCR_POSITIVE = true
                     isolate!(x, pol.isolation_duration) # full duration
                 else

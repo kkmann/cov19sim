@@ -6,6 +6,9 @@ mutable struct Individual{T1,T2,T3}
     symptom_probability::T2
     current_day::T3
 
+    # random effects
+    compliance::T2
+
     # logs etc
     isolation_log::Vector{Bool}
     isolation_stack::Vector{Bool}
@@ -19,17 +22,19 @@ mutable struct Individual{T1,T2,T3}
     test_log_type::Vector{String}
     test_log_vl::Vector{T2}
     test_log_pr_pos::Vector{T2}
-    test_log_result::Vector{Bool}
+    test_log_result::Vector{Int}
 end
 
 length(indv::Individual) = 1
 iterate(indv::Individual) = (indv, nothing)
 iterate(indv::Individual, state) = nothing
 
-function Individual(dm::T1, symptom_probability::T2; isolation_timeframe::Int = 30) where {T1<:DiseaseModel,T2<:Real}
+function Individual(dm::T1, symptom_probability::T2; a::T2 = Inf, b::T2 = 1.0, isolation_timeframe::Int = 30) where {T1<:DiseaseModel,T2<:Real}
+    # if a is Inf (default) set compliance to 100%
+    compliance = isfinite(a) ? rand(Distributions.Beta(a, b)) : 1.0
     Individual{T1,T2,Int}(
         uuid4(),
-        dm, sample(dm), 2^30, symptom_probability, 0,
+        dm, sample(dm), 2^30, symptom_probability, 0, compliance,
         falses(1), falses(isolation_timeframe),
         Vector{Int}(undef, 0), Vector{UUID}(undef, 0), Vector{Bool}(undef, 0), Vector{Bool}(undef, 0),
         Vector{Int}(undef, 0), Vector{String}(undef, 0), Vector{T2}(undef, 0), Vector{T2}(undef, 0), Vector{Bool}(undef, 0)
@@ -97,7 +102,9 @@ function log_contact!(a::Individual, b::Individual, a_infected_b::Bool, a_got_in
     push!(a.contacts_got_infected, a_got_infected)
 end
 
-function log_test!(indv::Individual, type::String, result::Bool, pr_pos::T) where {T<:Real}
+compliant(indv::Individual) = rand(Distributions.Bernoulli(indv.compliance))
+
+function log_test!(indv::Individual, type::String, result::Int, pr_pos::T) where {T<:Real}
     push!(indv.test_log_day, indv.current_day)
     push!(indv.test_log_type, type)
     push!(indv.test_log_result, result)
