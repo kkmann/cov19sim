@@ -4,7 +4,8 @@ dm = LarremoreModel(.05)
 school = ThreeLevelPopulation(
     policy_bubble = SymptomaticIsolation(FixedTest("lfd", .5, .997)),
     meeting_days = collect(0:4),
-    disease_model = dm
+    disease_model = dm;
+    a = .66, b = .34
 )
 idx = randperm(n_individuals(school))[1:5]
 infect!.(school.individuals[idx])

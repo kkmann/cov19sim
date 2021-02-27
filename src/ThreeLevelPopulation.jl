@@ -16,7 +16,9 @@ function ThreeLevelPopulation(;
     policy_school = DoNothing(),
     meeting_days = collect(0:4),
     disease_model = LarremoreModel(0.033),
-    pr_unrelated_symptoms = 0.01
+    pr_unrelated_symptoms = 0.01,
+    a = Inf,
+    b = 1.0
 )
     initial_parameters = Dict(
         :n_per_bubble => n_per_bubble,
@@ -30,11 +32,13 @@ function ThreeLevelPopulation(;
         :policy_school => policy_school,
         :meeting_days => meeting_days,
         :disease_model => disease_model,
-        :pr_unrelated_symptoms => pr_unrelated_symptoms
+        :pr_unrelated_symptoms => pr_unrelated_symptoms,
+        :a => a,
+        :b => b
     )
     bubbles = []
     for i in 1:(bubbles_per_class*m_classes)
-        bubble_individuals = [Individual(disease_model, pr_unrelated_symptoms) for j = 1:n_per_bubble]
+        bubble_individuals = [Individual(disease_model, pr_unrelated_symptoms; a = a, b = b) for j = 1:n_per_bubble]
         push!(bubbles, Group(bubble_individuals, deepcopy(policy_bubble), pr_meet_bubble, meeting_days))
     end
     classes = []

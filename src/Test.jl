@@ -37,10 +37,10 @@ function get_probability_positive(test::T, indv::I) where {T<:Test,I<:Individual
 end
 
 function conduct_test!(test::Test, indv::Individual)
+    pr = get_probability_positive(test, indv)
     if !compliant(indv)
         res = 2 # void
     else
-        pr = get_probability_positive(test, indv)
         res = Int(rand(Distributions.Bernoulli(pr)))
     end
     log_test!(indv, type(test), res, pr)
