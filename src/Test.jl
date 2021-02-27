@@ -36,9 +36,11 @@ function get_probability_positive(test::T, indv::I) where {T<:Test,I<:Individual
     pr
 end
 
+compliant(test::Test, indv::Individual) = type(test) == "pcr" ? true : compliant(indv)
+
 function conduct_test!(test::Test, indv::Individual)
     pr = get_probability_positive(test, indv)
-    if !compliant(indv)
+    if !compliant(test, indv)
         res = 2 # void
     else
         res = Int(rand(Distributions.Bernoulli(pr)))
