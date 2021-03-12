@@ -17,13 +17,13 @@ export DiseaseTrajectory
 export get_viral_load, is_symptomatic, has_recovered, duration
 
 include("InfectionModel.jl")
-export InfectionModel, ProportionalInfectionModel, LogRegInfectionModel
+export InfectionModel, ProportionalInfectionModel, LogRegInfectionModel, LogPropInfectionModel
 export get_infection_probability
 
 include("DiseaseModel.jl")
 export DiseaseModel
 export sample
-include("LarremoreModel.jl")
+include("disease-models/LarremoreModel.jl")
 export LarremoreModel
 
 include("Individual.jl")
