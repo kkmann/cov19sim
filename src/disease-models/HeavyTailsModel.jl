@@ -65,3 +65,9 @@ function sample(dm::HeavyTailsModel; n_retry = 1000)
     dt.vl .= 10 .^ tmp
     return dt
 end
+
+function (get_infection_probability(dm::T1, dt::DiseaseTrajectory{T2}, day::T3)::T2) where
+    {T1<:HeavyTailsModel,T2<:Real,T3<:Int}
+
+    get_infection_probability(dm.base_dm.infection_model, dt, day)
+end
