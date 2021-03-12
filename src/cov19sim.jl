@@ -4,6 +4,8 @@ import Distributions
 import Interpolations
 import DataFrames, DataFramesMeta, Statistics
 
+import LinearAlgebra.Symmetric
+
 import Base.length, Base.iterate, Base.UUID
 import UUIDs.uuid4
 length(x::UUID) = 1
@@ -25,6 +27,8 @@ export DiseaseModel
 export sample
 include("disease-models/LarremoreModel.jl")
 export LarremoreModel
+include("disease-models/HeavyTailsModel.jl")
+export HeavyTailsModel
 
 include("Individual.jl")
 export Individual

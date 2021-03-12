@@ -3,6 +3,7 @@ using cov19sim, Test, DataFrames, DataFramesMeta
 import Random.seed!, Random.randperm
 seed!(42)
 
+include("tests/test_disease_model.jl")
 include("tests/test_individual.jl")
 include("tests/test_tests.jl")
 include("tests/test_Group.jl")
