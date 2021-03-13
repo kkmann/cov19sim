@@ -8,6 +8,7 @@ mutable struct Individual{T1,T2,T3}
 
     # random effects
     compliance::T2
+    u_sensitivity::T2
 
     # logs etc
     isolation_log::Vector{Bool}
@@ -32,9 +33,11 @@ iterate(indv::Individual, state) = nothing
 function Individual(dm::T1, symptom_probability::T2; a::T2 = Inf, b::T2 = 1.0, isolation_timeframe::Int = 30) where {T1<:DiseaseModel,T2<:Real}
     # if a is Inf (default) set compliance to 100%
     compliance = isfinite(a) ? rand(Distributions.Beta(a, b)) : 1.0
+    u_sensitivity = rand(Distributions.Normal())
     Individual{T1,T2,Int}(
         uuid4(),
-        dm, sample(dm), 2^30, symptom_probability, 0, compliance,
+        dm, sample(dm), 2^30, symptom_probability, 0,
+        compliance, u_sensitivity,
         falses(1), falses(isolation_timeframe),
         Vector{Int}(undef, 0), Vector{UUID}(undef, 0), Vector{Bool}(undef, 0), Vector{Bool}(undef, 0),
         Vector{Int}(undef, 0), Vector{String}(undef, 0), Vector{T2}(undef, 0), Vector{T2}(undef, 0), Vector{Bool}(undef, 0)
