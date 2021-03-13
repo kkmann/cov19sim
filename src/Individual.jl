@@ -173,6 +173,7 @@ get_contact_logs(indvs::Vector{T}) where {T<:Individual} = vcat(get_contact_log.
 function get_test_log(indv::Individual)
     DataFrames.DataFrame(
         uuid = string(indv.uuid),
+        u = indv.u_sensitivity,
         day = indv.test_log_day,
         type = indv.test_log_type,
         result = indv.test_log_result,
