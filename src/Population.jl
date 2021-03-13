@@ -111,26 +111,29 @@ end
 
 mean_contacts_per_day(pop::Population) = get_mean_contacts_over_time(pop)[!, :contacts]
 
-function evaluate(pop::Population; workdays::Vector{Int} = collect(0:4))
+function evaluate(pop::Population; tests::Vector{String} = ["pcr"], workdays::Vector{Int} = collect(0:4))
     n_infectious = n_infectious_per_day(pop)
     mean_contacts = mean_contacts_per_day(pop)
     # reduce to working days
     mean_contacts = mean_contacts[
         is_workday.(0:(length(mean_contacts) - 1); workdays = workdays)
     ]
-    DataFrames.DataFrame(
+    tbl = DataFrames.DataFrame(
         id = string(uuid4()),
         n_infected = n_infected(pop),
         workdays_missed = n_workdays_missed(pop; workdays = workdays),
         mean_daily_infectious = Statistics.mean(n_infectious),
         std_daily_infectious = Statistics.std(n_infectious),
-        mean_daily_pp_contacts = Statistics.mean(mean_contacts),
-        n_pcr_tests = n_tests(pop, "pcr")
+        mean_daily_pp_contacts = Statistics.mean(mean_contacts)
     )
+    for test in tests
+        DataFrames.insertcols!(tbl, Symbol("n_$(test)_tests") => n_tests(pop, test))
+    end
+    return tbl
 end
 
-function evaluate(pops::Vector{T}; workdays::Vector{Int} = collect(0:4)) where {T<:Population}
-    vcat(evaluate.(pops; workdays = workdays)...)
+function evaluate(pops::Vector{T}; tests::Vector{String} = ["pcr"], workdays::Vector{Int} = collect(0:4)) where {T<:Population}
+    vcat(evaluate.(pops; tests = tests, workdays = workdays)...)
 end
 
 
