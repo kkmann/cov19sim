@@ -10,8 +10,7 @@ function HeavyTailsModel(
     dm::DM;
     l::T = 3.0,
     scale::T = 1.0,
-    df::T = 3.0;
-
+    df::T = 3.0
 ) where {T<:Real, DM<:DiseaseModel}
     HeavyTailsModel{T,DM}(dm, l, scale, df)
 end
