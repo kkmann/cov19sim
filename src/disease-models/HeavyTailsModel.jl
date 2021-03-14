@@ -53,7 +53,7 @@ function sample(dm::HeavyTailsModel; n_retry = 1000)
     for i = 1:n_retry
         tmp = l10vl + vcat(0.0, rand(X1, 1)[:, 1] ./ sqrt(rand(X2, 1)[1]/dm.df), 0.0)
         # check if we have sensible vl values
-        if all(tmp .>= 0)
+        if all(tmp .>= 0) & all(tmp - l10vl .<= 2*scale)
             success = true
             break
         end

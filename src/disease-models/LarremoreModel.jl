@@ -72,8 +72,7 @@ function sample(dm::LarremoreModel{T}) where {T<:Real}
     tpeak = t1 + rand(Distributions.Uniform(dm.day_onset_min, dm.day_onset_max))
     tsymptoms = tpeak + (has_symptoms ? rand(Distributions.Uniform(dm.symptom_delay_min, dm.symptom_delay_max)) : 0)
     tclearance = tsymptoms + rand(Distributions.Uniform(dm.clearance_delay_min, dm.clearance_delay_max))
-    clearance_slope = (l10vl_clearance - l10vl_peak) / (tclearance - tpeak)
-    tfinal = tclearance - l10vl_clearance / clearance_slope
+    tfinal = tclearance + 3
 
     t     = [t0,          t1,      tpeak,      tclearance, tfinal]
     l10vl = [ 0, l10vl_onset, l10vl_peak, l10vl_clearance,      0]
