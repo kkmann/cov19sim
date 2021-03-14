@@ -76,7 +76,7 @@ function sample(dm::LarremoreModel{T}) where {T<:Real}
     tfinal = tclearance - l10vl_clearance / clearance_slope
 
     t     = [t0,          t1,      tpeak,      tclearance, tfinal]
-    l10vl = [ 1, l10vl_onset, l10vl_peak, l10vl_clearance,      0]
+    l10vl = [ 0, l10vl_onset, l10vl_peak, l10vl_clearance,      0]
     approxfun = Interpolations.LinearInterpolation(t, l10vl; extrapolation_bc = Interpolations.Flat())
     tout = collect(0:ceil(tfinal)) .+ 7.5/24
     vlout = 10 .^ approxfun(tout)
