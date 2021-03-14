@@ -33,7 +33,8 @@ export HeavyTailsModel
 include("Individual.jl")
 export Individual
 export now, step!, steps!, infect!, meet!, get_status_log, get_contact_log, log_test!, get_test_log,
-    get_status_logs, get_contact_logs, get_test_logs, is_infected
+    get_status_logs, get_contact_logs, get_test_logs, is_infected,
+    is_pcr_positive, is_newly_symptomatic
 
 include("Test.jl")
 export Test

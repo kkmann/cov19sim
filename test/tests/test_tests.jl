@@ -47,3 +47,13 @@ lfd = LogRegTest("lfd", 0.76, -3.81, .998; ranef = 1.0)
 @test get_probability_positive(lfd, 1e7; u = 1.0) <
     get_probability_positive(lfd, 1e7; u = 3.0)
 @test Individual(dm, 0.0).u_sensitivity != 0.0
+
+
+# check pcr logging
+pcr = FixedTest("pcr", 1.0, 1.0; lod = 300.0)
+individual = Individual(dm, 0.0)
+@test is_pcr_positive(individual) == false
+infect!(individual)
+steps!(individual, 7)
+conduct_test!(pcr, individual)
+@test is_pcr_positive(individual) == true

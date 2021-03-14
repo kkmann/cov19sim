@@ -57,6 +57,7 @@ get_viral_load(indv::Individual) = get_viral_load(indv, indv.current_day)
 
 is_symptomatic(indv::Individual, day::T) where {T<:Int} = is_symptomatic(indv.dt, day - indv.day_infected)
 is_symptomatic(indv::Individual) = is_symptomatic(indv, indv.current_day)
+is_newly_symptomatic(indv::Individual) = is_symptomatic(indv, indv.current_day) & !is_symptomatic(indv, indv.current_day - 1)
 
 function has_recovered(indv::Individual, day::T) where {T<:Int}
     has_recovered(indv.dt, day - indv.day_infected)
@@ -68,6 +69,8 @@ get_infection_probability(indv::Individual) = get_infection_probability(indv, in
 
 is_infected(indv::Individual, day::T) where {T<:Int} = indv.day_infected <= day
 is_infected(indv::Individual) = is_infected(indv, indv.current_day)
+
+is_pcr_positive(ind::Individual) = any(ind.test_log_result[ind.test_log_type .== "pcr"] .== 1)
 
 function is_isolating(indv::Individual, day::T) where {T<:Int}
     if day < 0
