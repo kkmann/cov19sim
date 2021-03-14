@@ -16,8 +16,13 @@ sensitivity(test::T, indv::I) where {T<:Test,I<:Individual} =
 get_ar_window(test::T) where{T<:Test} = test.ar_window
 get_ar_coefficient(test::T) where{T<:Test} = test.ar_coefficient
 
-get_probability_positive(test::T, vl::R; u::R = 0.0) where {T<:Test,R<:Real} =
-    max( 1 - specificity(test), sensitivity(test, vl; u = u) )
+function get_probability_positive(test::T, vl::R; u::R = 0.0) where {T<:Test,R<:Real}
+    if vl < 1.0
+        return 1 - specificity(test)
+    else
+        return max( 1 - specificity(test), sensitivity(test, vl; u = u) )
+    end
+end
 function get_probability_positive(test::T, indv::I) where {T<:Test,I<:Individual}
     pr = get_probability_positive(test, get_viral_load(indv); u = indv.u_sensitivity)
     n_log = length(indv.test_log_type)
