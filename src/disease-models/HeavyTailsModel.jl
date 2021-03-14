@@ -12,7 +12,8 @@ function HeavyTailsModel(
     l::T = 3.0,
     scale::T = 1.0,
     df::T = 3.0,
-    daymax::Int = 10
+    daymax::Int = 10,
+    maxvl::T = 1e13
 ) where {T<:Real, DM<:DiseaseModel}
     HeavyTailsModel{T,DM}(dm, l, scale, df, daymax)
 end
@@ -56,7 +57,7 @@ function sample(dm::HeavyTailsModel; n_retry = 1000)
     for i = 1:n_retry
         tmp = l10vl[1:m] + vcat(0.0, rand(X1, 1)[:, 1] ./ sqrt(rand(X2, 1)[1]/dm.df), 0.0)
         # check if we have sensible vl values
-        if all(tmp .>= 0)
+        if all(tmp .>= 0) & all(tmp .<= dm.maxvl)
             success = true
             break
         end
