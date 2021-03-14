@@ -65,7 +65,7 @@ function sample(dm::HeavyTailsModel; n_retry = 1000)
         throw(InexactError)
     end
 
-    dt.vl[1:10] .= 10 .^ tmp
+    dt.vl[1:m] .= 10 .^ tmp
     return dt
 end
 
