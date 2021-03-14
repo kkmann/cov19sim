@@ -4,6 +4,7 @@ struct HeavyTailsModel{T,DM} <: DiseaseModel
     scale::T # standard deviation of covariance function
     df::T # degrees of freedom
     daymax::Int # maximal day for noise
+    maxvl::T
 end
 
 # constructor with default values (except infection model)
@@ -15,7 +16,7 @@ function HeavyTailsModel(
     daymax::Int = 10,
     maxvl::T = 1e13
 ) where {T<:Real, DM<:DiseaseModel}
-    HeavyTailsModel{T,DM}(dm, l, scale, df, daymax)
+    HeavyTailsModel{T,DM}(dm, l, scale, df, daymax, maxvl)
 end
 
 function sample(dm::HeavyTailsModel; n_retry = 1000)
