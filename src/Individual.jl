@@ -8,6 +8,7 @@ mutable struct Individual{T1,T2,T3}
 
     # random effects
     compliance::T2
+    u_sensitivity::T2
 
     # logs etc
     isolation_log::Vector{Bool}
@@ -32,9 +33,11 @@ iterate(indv::Individual, state) = nothing
 function Individual(dm::T1, symptom_probability::T2; a::T2 = Inf, b::T2 = 1.0, isolation_timeframe::Int = 30) where {T1<:DiseaseModel,T2<:Real}
     # if a is Inf (default) set compliance to 100%
     compliance = isfinite(a) ? rand(Distributions.Beta(a, b)) : 1.0
+    u_sensitivity = rand(Distributions.Normal())
     Individual{T1,T2,Int}(
         uuid4(),
-        dm, sample(dm), 2^30, symptom_probability, 0, compliance,
+        dm, sample(dm), 2^30, symptom_probability, 0,
+        compliance, u_sensitivity,
         falses(1), falses(isolation_timeframe),
         Vector{Int}(undef, 0), Vector{UUID}(undef, 0), Vector{Bool}(undef, 0), Vector{Bool}(undef, 0),
         Vector{Int}(undef, 0), Vector{String}(undef, 0), Vector{T2}(undef, 0), Vector{T2}(undef, 0), Vector{Bool}(undef, 0)
@@ -54,6 +57,7 @@ get_viral_load(indv::Individual) = get_viral_load(indv, indv.current_day)
 
 is_symptomatic(indv::Individual, day::T) where {T<:Int} = is_symptomatic(indv.dt, day - indv.day_infected)
 is_symptomatic(indv::Individual) = is_symptomatic(indv, indv.current_day)
+is_newly_symptomatic(indv::Individual) = is_symptomatic(indv, indv.current_day) & !is_symptomatic(indv, indv.current_day - 1)
 
 function has_recovered(indv::Individual, day::T) where {T<:Int}
     has_recovered(indv.dt, day - indv.day_infected)
@@ -65,6 +69,8 @@ get_infection_probability(indv::Individual) = get_infection_probability(indv, in
 
 is_infected(indv::Individual, day::T) where {T<:Int} = indv.day_infected <= day
 is_infected(indv::Individual) = is_infected(indv, indv.current_day)
+
+is_pcr_positive(ind::Individual) = any(ind.test_log_result[ind.test_log_type .== "pcr"] .== 1)
 
 function is_isolating(indv::Individual, day::T) where {T<:Int}
     if day < 0
@@ -170,6 +176,7 @@ get_contact_logs(indvs::Vector{T}) where {T<:Individual} = vcat(get_contact_log.
 function get_test_log(indv::Individual)
     DataFrames.DataFrame(
         uuid = string(indv.uuid),
+        u = indv.u_sensitivity,
         day = indv.test_log_day,
         type = indv.test_log_type,
         result = indv.test_log_result,

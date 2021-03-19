@@ -3,6 +3,8 @@ struct HeavyTailsModel{T,DM} <: DiseaseModel
     l::T # lengthscale of covariance function
     scale::T # standard deviation of covariance function
     df::T # degrees of freedom
+    daymax::Int # maximal day for noise
+    maxvl::T
 end
 
 # constructor with default values (except infection model)
@@ -10,9 +12,11 @@ function HeavyTailsModel(
     dm::DM;
     l::T = 3.0,
     scale::T = 1.0,
-    df::T = 3.0
+    df::T = 3.0,
+    daymax::Int = 10,
+    maxvl::T = 1e13
 ) where {T<:Real, DM<:DiseaseModel}
-    HeavyTailsModel{T,DM}(dm, l, scale, df)
+    HeavyTailsModel{T,DM}(dm, l, scale, df, daymax, maxvl)
 end
 
 function sample(dm::HeavyTailsModel; n_retry = 1000)
@@ -20,13 +24,14 @@ function sample(dm::HeavyTailsModel; n_retry = 1000)
     # sample mean from underlying model
     dt = sample(dm.base_dm)
     l10vl = log10.(dt.vl)
-    if length(l10vl) < 3
+    m = min(length(l10vl), dm.daymax)
+    if m < 3
         throw(InexactError)
     end
 
     # construct covariance matrix
-    K = Matrix{eltype(l10vl)}(undef, length(l10vl), length(l10vl))
-    for i = 1:length(l10vl)
+    K = Matrix{eltype(l10vl)}(undef, m, m)
+    for i = 1:m
         K[i, i] = dm.scale^2 + sqrt(eps())
         for j = 1:(i - 1)
             d = abs(i - j)
@@ -37,8 +42,8 @@ function sample(dm::HeavyTailsModel; n_retry = 1000)
 
     # condition on initial and last value being 0
     # see https://arxiv.org/abs/1402.4306
-    idx_known = [1, length(l10vl)]
-    idx_unknown = 2:(length(l10vl) - 1) # indices in reordered values
+    idx_known = [1, m]
+    idx_unknown = 2:(m - 1) # indices in reordered values
     K11 = K[idx_known, idx_known]
     K12 = K[idx_known, idx_unknown]
     K21 = K[idx_unknown, idx_known]
@@ -48,12 +53,12 @@ function sample(dm::HeavyTailsModel; n_retry = 1000)
     # sample from multivariate t distribution conditional on log10 VL + noise being positive
     X1 = Distributions.MvNormal(zeros(length(idx_unknown)), Symmetric(KK_))
     X2 = Distributions.Chisq(dm.df)
-    tmp = zeros(length(l10vl))
+    tmp = zeros(m)
     success = false
     for i = 1:n_retry
-        tmp = l10vl + vcat(0.0, rand(X1, 1)[:, 1] ./ sqrt(rand(X2, 1)[1]/dm.df), 0.0)
+        tmp = l10vl[1:m] + vcat(0.0, rand(X1, 1)[:, 1] ./ sqrt(rand(X2, 1)[1]/dm.df), 0.0)
         # check if we have sensible vl values
-        if all(tmp .>= 0)
+        if all(tmp .>= 0) & all(tmp .<= dm.maxvl)
             success = true
             break
         end
@@ -62,7 +67,7 @@ function sample(dm::HeavyTailsModel; n_retry = 1000)
         throw(InexactError)
     end
 
-    dt.vl .= 10 .^ tmp
+    dt.vl[1:m] .= 10 .^ tmp
     return dt
 end
 

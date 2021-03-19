@@ -35,7 +35,7 @@ function test_and_isolate!(pol::SymptomaticIsolation, gr::Group)
     any_pcr_positive = false
     for x in gr.individuals
         # check symptoms first
-        if is_symptomatic(x) # check symptoms, including those already isolating
+        if is_newly_symptomatic(x) # check for new symptoms
             any_symptomatic = true
             pcr_test_positive = is_positive(conduct_test!(pol.pcr_test, x))
             if pcr_test_positive
@@ -46,8 +46,9 @@ function test_and_isolate!(pol::SymptomaticIsolation, gr::Group)
             end
         end
         # if screening weekday, apply screening tests to all non-isolating (excl. symtomatic)
+        # skip individuals who were pcr positive previously (already underwent isolation)
         if mod(now(gr), 7) in pol.screening_test_weekdays
-            if !is_isolating(x) & !is_symptomatic(x)
+            if !is_isolating(x) & !is_newly_symptomatic(x) & !is_pcr_positive(x)
                 screening_test_positive = is_positive(conduct_test!(pol.screening_test, x))
                 if screening_test_positive # PCR-test + immediately isolate individuals (if positive)
                     any_screening_test_positive = true
